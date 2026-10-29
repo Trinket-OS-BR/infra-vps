@@ -1,0 +1,49 @@
+# Observabilidade compartilhada (logs, métricas e traces por OTLP, com painel). Portas internas 4140 (painel, API e
+# OTLP HTTP) e 4141 (OTLP gRPC); nenhuma é publicada no host (docs/padroes.md). O painel sai pelo proxy; os apps enviam
+# pela rede `data`, direto ao contêiner.
+# Isolamento entre produtos: uma organização por produto, com um usuário próprio (scripts/observability-create-org.sh).
+# O administrador raiz (.env) é só para manutenção.
+# A imagem -debug existe só por causa do curl do healthcheck: a imagem padrão não tem shell nem curl.
+name: platform-observability
+
+services:
+  openobserve:
+    image: public.ecr.aws/zinclabs/openobserve:v1.1.2-debug
+    container_name: platform-openobserve
+    restart: unless-stopped
+    init: true
+    user: "10001:10001"
+    env_file: [.env]
+    expose: ["4140", "4141"]
+    volumes:
+      - platform-observability-data:/data
+    networks: [data, proxy]
+    mem_limit: 1g
+    cpus: 1.0
+    pids_limit: 512
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:4140/healthz"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    labels:
+      app.product: platform
+      app.service: observability
+      app.environment: production
+
+volumes:
+  platform-observability-data:
+
+networks:
+  data:
+    external: true
+    name: data
+  proxy:
+    external: true
+    name: proxy

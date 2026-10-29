@@ -20,11 +20,14 @@ flowchart LR
       postgres[("platform-postgres<br/>:4130")]
       redis[("platform-redis<br/>:4131 · 1 usuário ACL por produto")]
       rabbit[("platform-rabbitmq (preparado, desligado)<br/>AMQP 4132 · STOMP 4133 · 1 vhost por produto")]
+      obs[("platform-openobserve (preparado, desligado)<br/>:4140 · 1 organização por produto")]
     end
     proxy -->|reverse_proxy| app
     app -->|"DATABASE_URL (rede data)"| postgres
     app -->|"REDIS_URL (só o prefixo do produto)"| redis
     app -.->|"AMQP ou STOMP relay (só o vhost do produto)"| rabbit
+    app -.->|"OTLP: logs, métricas e traces (só a organização do produto)"| obs
+    proxy -.->|"painel (quando houver domínio)"| obs
   end
 
   app -->|"arquivos enviados"| r2[("Armazenamento de objetos (opcional)")]
@@ -37,6 +40,7 @@ flowchart LR
 | postgres | `platform/postgres` | data | 4130 | não |
 | redis | `platform/redis` | data | 4131 | não |
 | rabbitmq (preparado) | `platform/rabbitmq` | data | 4132, 4133, 4134 | não |
+| observability / openobserve (preparado) | `platform/observability` | data, proxy | 4140, 4141 | não |
 | app (um por produto e serviço) | `apps/<produto>/production/<serviço>` | proxy, data | 4100–4129 | não |
 
 ## 2. CI/CD (do push ao ar)
@@ -81,7 +85,7 @@ flowchart LR
 
 ## 5. Onde cada escopo está documentado
 
-Veja a [Wiki](https://github.com/Trinket-OS-BR/infra-vps/wiki), páginas 1 a 17.
+Veja a [Wiki](https://github.com/Trinket-OS-BR/infra-vps/wiki), páginas 1 a 18.
 
 ## 6. Como atualizar
 
@@ -97,3 +101,4 @@ Veja a [Wiki](https://github.com/Trinket-OS-BR/infra-vps/wiki), páginas 1 a 17.
 | 2026-10-29 | Versão inicial: proxy, postgres, app, CI/CD, backup e acesso administrativo. |
 | 2026-10-29 | Redis compartilhado com isolamento por usuário ACL e prefixo de chave. |
 | 2026-10-29 | RabbitMQ com STOMP preparado (desligado): um vhost e um usuário por produto. |
+| 2026-10-29 | OpenObserve preparado (desligado): logs, métricas e traces por OTLP, uma organização e um usuário por produto. |

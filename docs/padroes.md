@@ -26,6 +26,7 @@ Valem para tudo que roda na VPS (somente produção). `scripts/validate.sh` cobr
 |---|---|---|
 | 4100–4129 | aplicações (uma dezena por produto) | offer web 4101 |
 | 4130–4139 | dados | postgres 4130, redis 4131, rabbitmq 4132 (AMQP), 4133 (STOMP), 4134 (gestão) |
+| 4140–4149 | observabilidade | openobserve 4140 (painel, API e OTLP HTTP), 4141 (OTLP gRPC) |
 
 ## 3. Obrigatório em todo serviço [auto]
 
@@ -51,6 +52,7 @@ Só em `.env`/`.env.production` na VPS (600), fora do Git. Senha gerada na VPS (
 - Acesso administrativo por `docker exec` ou túnel SSH; nunca porta aberta.
 - **Redis compartilhado** (`platform/redis`, porta 4131): um usuário ACL por produto (`scripts/redis-create-user.sh`), restrito a chaves e canais com o prefixo `<produto>:`; sem `KEYS`, `SCAN`, `SELECT`, `INFO`, `CONFIG` nem `FLUSHALL`. O usuário `default` fica desligado e o administrador só é usado por `docker exec`. O app **prefixa todas as chaves** e usa **TTL em cache** (a política `volatile-lru` só descarta chaves com TTL). `scripts/redis-selftest.sh` prova o isolamento. Fila que exige `noeviction` (ex.: BullMQ) pede instância própria.
 - **RabbitMQ compartilhado** (`platform/rabbitmq`, portas 4132 AMQP, 4133 STOMP e 4134 gestão): um **vhost e um usuário por produto** (`scripts/rabbitmq-create-vhost.sh`), com permissão só no próprio vhost e sem etiqueta de gestão. O STOMP (relay de mensagens dos apps) usa o mesmo usuário e informa o vhost no cabeçalho `host`. O painel de gestão não tem porta no host: só por túnel SSH. `scripts/rabbitmq-selftest.sh` prova o isolamento.
+- **Observabilidade compartilhada** (`platform/observability`, OpenObserve, portas 4140 e 4141): logs, métricas e traces por OTLP. Uma **organização e um usuário por produto** (`scripts/observability-create-org.sh`); o usuário só existe na própria organização. Os apps enviam pela rede `data`; o painel sai pelo proxy (e, enquanto não houver domínio, só por túnel SSH). A imagem `-debug` é usada só pelo `curl` do healthcheck. `scripts/observability-selftest.sh` prova o isolamento.
 
 ## 7. Diagrama
 
