@@ -79,6 +79,8 @@ Para atualizar depois de uma mudança na receita: `git pull && scripts/up.sh`.
 | `scripts/postgres-create-db.sh <nome> <arquivo>` | Cria banco e usuário próprios de um produto                               |
 | `scripts/redis-create-user.sh <nome> <arquivo>` | Cria o usuário Redis de um produto (só o prefixo `<nome>:`)                |
 | `scripts/redis-selftest.sh`                      | Prova que dois produtos não se enxergam no Redis (cria e apaga usuários temporários) |
+| `scripts/rabbitmq-create-vhost.sh <nome> <arquivo>` | Cria o vhost e o usuário RabbitMQ de um produto (permissão só no próprio vhost) |
+| `scripts/rabbitmq-selftest.sh`                   | Prova que dois produtos não se enxergam no RabbitMQ (AMQP/STOMP e API de gestão) |
 | `scripts/backup-init.sh <nome>`                  | Prepara um alvo: senha de criptografia e repositório Restic no R2         |
 | `scripts/backup-run.sh <nome>`                   | Backup de um alvo: dump, verificação, Restic para o R2, retenção e heartbeat |
 | `scripts/backup-status.sh <nome>`                | Lista os snapshots do alvo no R2 e o próximo timer (só leitura)           |
@@ -92,6 +94,7 @@ infra-vps/
 ├── platform/
 │   ├── postgres/          # compose.yaml e .env.example
 │   ├── redis/             # Redis compartilhado: compose.yaml, redis.conf e .env.example
+│   ├── rabbitmq/          # RabbitMQ + STOMP (preparado): compose.yaml, rabbitmq.conf e enabled_plugins
 │   ├── proxy/             # Caddy: compose.yaml, Caddyfile e .env.example
 │   │                      #   (única entrada HTTP/HTTPS da VPS)
 │   └── backup/            # modelos de r2.env e heartbeat.env

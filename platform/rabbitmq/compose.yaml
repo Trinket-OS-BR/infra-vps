@@ -1,0 +1,46 @@
+# RabbitMQ compartilhado (filas e STOMP para o relay de mensagens dos apps). Só na rede `data`.
+# Portas internas: 4132 (AMQP), 4133 (STOMP), 4134 (painel de gestão, acessado por túnel SSH; docs/padroes.md).
+# Isolamento: um vhost e um usuário por produto (scripts/rabbitmq-create-vhost.sh). O administrador (.env)
+# é só para manutenção por `docker exec` ou pelo painel via túnel.
+name: platform-rabbitmq
+
+services:
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    container_name: platform-rabbitmq
+    restart: unless-stopped
+    init: true
+    user: rabbitmq
+    env_file: [.env]
+    expose: ["4132", "4133", "4134"]
+    volumes:
+      - ./rabbitmq.conf:/etc/rabbitmq/conf.d/20-platform.conf:ro
+      - ./enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
+      - platform-rabbitmq-data:/var/lib/rabbitmq
+    networks: [data]
+    mem_limit: 768m
+    cpus: 1.0
+    pids_limit: 512
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    labels:
+      app.product: platform
+      app.service: rabbitmq
+      app.environment: production
+
+volumes:
+  platform-rabbitmq-data:
+
+networks:
+  data:
+    external: true
+    name: data

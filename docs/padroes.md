@@ -25,7 +25,7 @@ Valem para tudo que roda na VPS (somente produção). `scripts/validate.sh` cobr
 | Faixa | Uso | Atribuídas |
 |---|---|---|
 | 4100–4129 | aplicações (uma dezena por produto) | offer web 4101 |
-| 4130–4139 | dados | postgres 4130, redis 4131 |
+| 4130–4139 | dados | postgres 4130, redis 4131, rabbitmq 4132 (AMQP), 4133 (STOMP), 4134 (gestão) |
 
 ## 3. Obrigatório em todo serviço [auto]
 
@@ -50,6 +50,7 @@ Só em `.env`/`.env.production` na VPS (600), fora do Git. Senha gerada na VPS (
 - Backup de todo banco em `backups.list`, cada um com a sua agenda (timer do systemd) e retenção: `pg_dump -Fc` verificado, enviado com **Restic** (criptografado) ao R2, `restic forget --prune` e **heartbeat obrigatório** (sem sinal, o monitor avisa). Credenciais só em `/etc/infra-backup` (600). Nunca aplique expiração de objetos do R2 sobre um repositório Restic. Backup que não foi restaurado uma vez (`scripts/backup-restore.sh`) não conta como backup.
 - Acesso administrativo por `docker exec` ou túnel SSH; nunca porta aberta.
 - **Redis compartilhado** (`platform/redis`, porta 4131): um usuário ACL por produto (`scripts/redis-create-user.sh`), restrito a chaves e canais com o prefixo `<produto>:`; sem `KEYS`, `SCAN`, `SELECT`, `INFO`, `CONFIG` nem `FLUSHALL`. O usuário `default` fica desligado e o administrador só é usado por `docker exec`. O app **prefixa todas as chaves** e usa **TTL em cache** (a política `volatile-lru` só descarta chaves com TTL). `scripts/redis-selftest.sh` prova o isolamento. Fila que exige `noeviction` (ex.: BullMQ) pede instância própria.
+- **RabbitMQ compartilhado** (`platform/rabbitmq`, portas 4132 AMQP, 4133 STOMP e 4134 gestão): um **vhost e um usuário por produto** (`scripts/rabbitmq-create-vhost.sh`), com permissão só no próprio vhost e sem etiqueta de gestão. O STOMP (relay de mensagens dos apps) usa o mesmo usuário e informa o vhost no cabeçalho `host`. O painel de gestão não tem porta no host: só por túnel SSH. `scripts/rabbitmq-selftest.sh` prova o isolamento.
 
 ## 7. Diagrama
 
