@@ -20,7 +20,7 @@ flowchart LR
       postgres[("platform-postgres<br/>:4130")]
       redis[("platform-redis<br/>:4131 · 1 usuário ACL por produto")]
       rabbit[("platform-rabbitmq (preparado, desligado)<br/>AMQP 4132 · STOMP 4133 · 1 vhost por produto")]
-      obs[("platform-openobserve (preparado, desligado)<br/>:4140 · 1 organização por produto")]
+      obs[("platform-openobserve (no ar)<br/>:4140 · 1 organização por produto")]
     end
     proxy -->|reverse_proxy| app
     app -->|"DATABASE_URL (rede data)"| postgres
@@ -40,7 +40,7 @@ flowchart LR
 | postgres | `platform/postgres` | data | 4130 | não |
 | redis | `platform/redis` | data | 4131 | não |
 | rabbitmq (preparado) | `platform/rabbitmq` | data | 4132, 4133, 4134 | não |
-| observability / openobserve (preparado) | `platform/observability` | data, proxy | 4140, 4141 | não |
+| observability / openobserve | `platform/observability` | data, proxy | 4140, 4141 | não |
 | app (um por produto e serviço) | `apps/<produto>/production/<serviço>` | proxy, data | 4100–4129 | não |
 
 ## 2. CI/CD (do push ao ar)
