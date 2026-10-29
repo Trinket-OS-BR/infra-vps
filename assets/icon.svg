@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Infra VPS">
+  <title>Infra VPS</title>
+  <rect width="512" height="512" rx="112" fill="#0D2A31"/>
+  <g transform="translate(0,-14)">
+  <polygon points="116,340 256,410 256,432 116,362" fill="#2A5E67"/>
+  <polygon points="256,410 396,340 396,362 256,432" fill="#1F4A52"/>
+  <polygon points="256,270 396,340 256,410 116,340" fill="#3E7E88"/>
+  <polygon points="116,260 256,330 256,352 116,282" fill="#D9CFB4"/>
+  <polygon points="256,330 396,260 396,282 256,352" fill="#C2B896"/>
+  <polygon points="256,190 396,260 256,330 116,260" fill="#F6EFDD"/>
+  <polygon points="116,180 256,250 256,272 116,202" fill="#C77F1C"/>
+  <polygon points="256,250 396,180 396,202 256,272" fill="#A8680F"/>
+  <polygon points="256,110 396,180 256,250 116,180" fill="#F2A43A"/>
+  </g>
+</svg>
