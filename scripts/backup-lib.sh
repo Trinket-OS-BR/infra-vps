@@ -32,8 +32,11 @@ restic_env() {
   [ -f "$conf_dir/r2.env" ] || { echo "falta $conf_dir/r2.env (modelo: platform/backup/r2.env.example)" >&2; return 1; }
   set -a; . "$conf_dir/r2.env"; set +a
   : "${R2_ENDPOINT:?}" "${R2_BUCKET:?}" "${AWS_ACCESS_KEY_ID:?}" "${AWS_SECRET_ACCESS_KEY:?}"
+  # Opcional, para adotar um repositório Restic que já existe: /etc/infra-backup/<nome>.env com REPO_PATH=<caminho no bucket>.
+  unset REPO_PATH
+  if [ -f "$conf_dir/$name.env" ]; then set -a; . "$conf_dir/$name.env"; set +a; fi
   export RESTIC_PASSWORD_FILE="$conf_dir/$name.password"
-  export RESTIC_REPOSITORY="s3:${R2_ENDPOINT%/}/$R2_BUCKET/$name"
+  export RESTIC_REPOSITORY="s3:${R2_ENDPOINT%/}/$R2_BUCKET/${REPO_PATH:-$name}"
   [ -f "$RESTIC_PASSWORD_FILE" ] || { echo "falta $RESTIC_PASSWORD_FILE (rode scripts/backup-init.sh $name)" >&2; return 1; }
   [ -x "$restic_bin" ] || { echo "restic não encontrado em $restic_bin (ver Wiki, página de backup)" >&2; return 1; }
 }

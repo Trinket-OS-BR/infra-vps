@@ -79,6 +79,7 @@ Para atualizar depois de uma mudança na receita: `git pull && scripts/up.sh`.
 | `scripts/postgres-create-db.sh <nome> <arquivo>` | Cria banco e usuário próprios de um produto                               |
 | `scripts/backup-init.sh <nome>`                  | Prepara um alvo: senha de criptografia e repositório Restic no R2         |
 | `scripts/backup-run.sh <nome>`                   | Backup de um alvo: dump, verificação, Restic para o R2, retenção e heartbeat |
+| `scripts/backup-status.sh <nome>`                | Lista os snapshots do alvo no R2 e o próximo timer (só leitura)           |
 | `scripts/backup-systemd.sh [--apply]`            | Mostra ou instala o timer do systemd de cada alvo (agenda por banco)      |
 | `scripts/backup-restore.sh <nome> <latest\|id> <banco>` | Restaura um snapshot em um banco novo                              |
 
