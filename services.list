@@ -1,3 +1,4 @@
 # Serviços que a VPS mantém de pé, na ordem de subida (uma pasta por linha; # desliga).
 # Entram um a um, só depois que o anterior estiver estável.
 platform/postgres
+#apps/offer/production/web   # habilite depois de criar .env e .env.production (ver apps/offer/production/web/*.example)
