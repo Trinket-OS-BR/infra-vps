@@ -1,0 +1,3 @@
+# Serviços que a VPS mantém de pé, na ordem de subida (uma pasta por linha; # desliga).
+# Entram um a um, só depois que o anterior estiver estável.
+platform/postgres

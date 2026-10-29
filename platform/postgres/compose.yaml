@@ -1,0 +1,61 @@
+# PostgreSQL compartilhado da plataforma. Só na rede interna `data`: sem porta no host.
+# Porta fora do padrão (4130, ver docs/padroes.md). Administração: docker exec ou túnel SSH.
+name: platform-postgres
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: platform-postgres
+    restart: unless-stopped
+    init: true
+    env_file: [.env]
+    environment:
+      - PGPORT=4130
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    command:
+      - postgres
+      - -c
+      - port=4130
+      - -c
+      - max_connections=100
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - effective_cache_size=512MB
+      - -c
+      - work_mem=8MB
+      - -c
+      - log_min_duration_statement=500
+      - -c
+      - log_connections=on
+    expose: ["4130"]
+    networks: [data]
+    volumes:
+      - platform-postgres-data:/var/lib/postgresql/data
+    shm_size: 128mb
+    mem_limit: 1g
+    cpus: 1.0
+    pids_limit: 300
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -p 4130 -U \"$$POSTGRES_USER\" -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    labels:
+      app.product: platform
+      app.service: postgres
+      app.environment: production
+
+networks:
+  data:
+    external: true
+    name: data
+
+volumes:
+  platform-postgres-data:
+    name: platform-postgres-data
