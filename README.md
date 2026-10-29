@@ -29,7 +29,7 @@ As aplicações (como o Offer) têm repositórios próprios e se conectam a esta
 
 | Área           | Tecnologia                                   |
 | -------------- | -------------------------------------------- |
-| Servidor       | Ubuntu 26.04 LTS (VPS Hostinger)             |
+| Servidor       | Ubuntu LTS em uma VPS                       |
 | Contêineres    | Docker e Docker Compose                      |
 | Banco de dados | PostgreSQL 16 (Alpine)                       |
 | Automação      | Scripts Bash                                 |

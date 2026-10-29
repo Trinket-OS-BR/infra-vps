@@ -33,7 +33,7 @@ Valem para tudo que roda na VPS (somente produção). `scripts/validate.sh` cobr
 
 ## 4. Recursos
 
-Limite = pico medido x 3 a 4. Soma dos limites <= 75% da RAM (15 GiB). Revisar após uma semana com `docker stats`.
+Limite = pico medido x 3 a 4. Soma dos limites <= 75% da RAM. Revisar após uma semana com `docker stats`.
 
 | Serviço | `mem_limit` | `cpus` |
 |---|---|---|
