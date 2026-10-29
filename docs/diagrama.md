@@ -27,7 +27,7 @@ flowchart LR
     app -->|"REDIS_URL (só o prefixo do produto)"| redis
     app -.->|"AMQP ou STOMP relay (só o vhost do produto)"| rabbit
     app -.->|"OTLP: logs, métricas e traces (só a organização do produto)"| obs
-    proxy -.->|"painel (quando houver domínio)"| obs
+    proxy -->|"painel (atrás do controle de acesso)"| obs
   end
 
   app -->|"arquivos enviados"| r2[("Armazenamento de objetos (opcional)")]
@@ -81,6 +81,8 @@ flowchart LR
   vps -->|"docker exec / psql"| postgres[("platform-postgres")]
   vps -->|"git pull"| repo["infra-vps (GitHub)"]
   ci(["GitHub Actions"]) -->|"SSH com chave do CI"| vps
+  eu -->|"painel: controle de acesso do DNS/CDN + login do OpenObserve"| cdn["CDN / controle de acesso"]
+  cdn --> vps
 ```
 
 ## 5. Onde cada escopo está documentado
@@ -102,3 +104,4 @@ Veja a [Wiki](https://github.com/Trinket-OS-BR/infra-vps/wiki), páginas 1 a 18.
 | 2026-10-29 | Redis compartilhado com isolamento por usuário ACL e prefixo de chave. |
 | 2026-10-29 | RabbitMQ com STOMP preparado (desligado): um vhost e um usuário por produto. |
 | 2026-10-29 | OpenObserve preparado (desligado): logs, métricas e traces por OTLP, uma organização e um usuário por produto. |
+| 2026-10-29 | OpenObserve no ar: o painel sai pelo proxy atrás de uma camada de acesso (controle de acesso do DNS/CDN, só o administrador); os apps enviam traces pela rede `data`; alertas por organização com destino de chat. |
