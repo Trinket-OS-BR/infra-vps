@@ -18,9 +18,11 @@ flowchart LR
     end
     subgraph rdata["rede data (interna, sem internet)"]
       postgres[("platform-postgres<br/>:4130")]
+      redis[("platform-redis<br/>:4131 · 1 usuário ACL por produto")]
     end
     proxy -->|reverse_proxy| app
     app -->|"DATABASE_URL (rede data)"| postgres
+    app -->|"REDIS_URL (só o prefixo do produto)"| redis
   end
 
   app -->|"arquivos enviados"| r2[("Armazenamento de objetos (opcional)")]
@@ -31,6 +33,7 @@ flowchart LR
 |---|---|---|---|---|
 | proxy | `platform/proxy` | proxy | — | 80, 443, 443/udp |
 | postgres | `platform/postgres` | data | 4130 | não |
+| redis | `platform/redis` | data | 4131 | não |
 | app (um por produto e serviço) | `apps/<produto>/production/<serviço>` | proxy, data | 4100–4129 | não |
 
 ## 2. CI/CD (do push ao ar)
@@ -75,7 +78,7 @@ flowchart LR
 
 ## 5. Onde cada escopo está documentado
 
-Veja a [Wiki](https://github.com/Trinket-OS-BR/infra-vps/wiki), páginas 1 a 15.
+Veja a [Wiki](https://github.com/Trinket-OS-BR/infra-vps/wiki), páginas 1 a 16.
 
 ## 6. Como atualizar
 
@@ -89,3 +92,4 @@ Veja a [Wiki](https://github.com/Trinket-OS-BR/infra-vps/wiki), páginas 1 a 15.
 | Data | Mudança |
 |---|---|
 | 2026-10-29 | Versão inicial: proxy, postgres, app, CI/CD, backup e acesso administrativo. |
+| 2026-10-29 | Redis compartilhado com isolamento por usuário ACL e prefixo de chave. |

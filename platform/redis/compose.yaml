@@ -1,0 +1,48 @@
+# Redis compartilhado (cache, sessões, filas). Porta interna 4131 (docs/padroes.md), só na rede `data`.
+# Isolamento entre produtos: um usuário ACL por produto, limitado ao prefixo `<produto>:` (scripts/redis-create-user.sh).
+# O administrador (senha no .env) é só para manutenção por `docker exec`; o usuário `default` fica desligado.
+name: platform-redis
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: platform-redis
+    restart: unless-stopped
+    init: true
+    user: redis
+    env_file: [.env]
+    entrypoint: ["sh", "-c"]
+    # Na primeira subida cria o arquivo de ACL com o administrador; depois ele é a fonte da verdade (ACL SAVE).
+    command:
+      - 'if [ ! -f /data/users.acl ]; then printf "user default off\nuser admin on >%s ~* &* +@all\n" "$$REDIS_ADMIN_PASSWORD" > /data/users.acl; fi; exec redis-server /etc/redis/redis.conf'
+    expose: ["4131"]
+    volumes:
+      - ./redis.conf:/etc/redis/redis.conf:ro
+      - platform-redis-data:/data
+    networks: [data]
+    mem_limit: 512m
+    cpus: 0.5
+    pids_limit: 100
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: ["CMD-SHELL", 'REDISCLI_AUTH="$$REDIS_ADMIN_PASSWORD" redis-cli -p 4131 --user admin ping | grep -q PONG']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    labels:
+      app.product: platform
+      app.service: redis
+      app.environment: production
+
+volumes:
+  platform-redis-data:
+
+networks:
+  data:
+    external: true
+    name: data

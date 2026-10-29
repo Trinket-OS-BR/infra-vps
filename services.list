@@ -1,6 +1,8 @@
 # Serviços que a VPS mantém de pé, na ordem de subida (uma pasta por linha; # desliga).
 # Entram um a um, só depois que o anterior estiver estável.
 platform/postgres
+# Exige platform/redis/.env (senha do administrador, gerada na VPS).
+platform/redis
 # O Offer exige .env e .env.production na pasta (o deploy do CI grava os dois).
 apps/offer/production/web
 # O proxy vem por último: só recebe tráfego de quem já está de pé. Exige platform/proxy/.env.
