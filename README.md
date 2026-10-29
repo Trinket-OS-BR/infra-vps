@@ -96,7 +96,8 @@ infra-vps/
 ├── apps/                  # um serviço por produto/ambiente (ex.: offer/production/web)
 ├── scripts/               # up, bootstrap, deploy-service, validate, postgres-*, backup-*
 ├── docs/
-│   └── padroes.md         # nomes, redes, portas, recursos, segredos e dados
+│   ├── padroes.md         # nomes, redes, portas, recursos, segredos e dados
+│   └── diagrama.md        # diagrama da plataforma (atualizar a cada escopo novo)
 └── services.list          # o que sobe, em ordem
 ```
 
@@ -106,7 +107,7 @@ Contêineres `platform-<serviço>` e `<produto>-<serviço>-production`; rede `da
 
 ## Como contribuir
 
-Antes de criar um serviço, leia [docs/padroes.md](docs/padroes.md) e copie um serviço parecido. Todo serviço novo entra com um `compose.yaml` que passe em `scripts/validate.sh`, o `.env.example` com os nomes das variáveis (nunca valores reais) e uma linha em `services.list`. Ao abrir um pull request, informe como foi verificado.
+Antes de criar um serviço, leia [docs/padroes.md](docs/padroes.md) e copie um serviço parecido. Todo serviço novo entra com um `compose.yaml` que passe em `scripts/validate.sh`, o `.env.example` com os nomes das variáveis (nunca valores reais), uma linha em `services.list` e **a atualização do [diagrama da plataforma](docs/diagrama.md)** (a validação falha se o serviço não constar nele; copie a mudança para a página 15 da Wiki). Ao abrir um pull request, informe como foi verificado.
 
 Este repositório é **público**: nunca inclua senhas, tokens, chaves, endereços internos ou dados de clientes em arquivos, logs ou capturas de tela.
 
