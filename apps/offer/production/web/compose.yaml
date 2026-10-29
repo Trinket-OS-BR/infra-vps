@@ -9,8 +9,13 @@ services:
     container_name: offer-web-production
     restart: unless-stopped
     init: true
-    env_file: [.env.production]
+    # As credenciais de observabilidade ficam só na VPS (scripts/observability-create-org.sh); sem o arquivo, o app sobe sem enviar dados.
+    env_file:
+      - .env.production
+      - path: /srv/secrets/offer-observability.env
+        required: false
     environment:
+      - OTEL_SERVICE_NAME=offer-web-production
       - PORT=4101
       - HOSTNAME=0.0.0.0
     expose: ["4101"]
