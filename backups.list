@@ -1,0 +1,9 @@
+# Bancos com backup para o R2. Um por linha, campos separados por "|":
+#   nome | contêiner | porta | usuário admin | banco | agenda (cron) | retenção no R2 (dias)
+# "nome" identifica o alvo (pasta no R2 e nos logs). Agendas diferentes por banco são o ponto:
+# `scripts/backup-cron.sh --apply` instala a agenda de cada linha no crontab.
+# Linhas com # ficam desligadas. Sem segredos aqui: as credenciais do R2 ficam em /srv/secrets/r2.env.
+#
+# nome      | contêiner         | porta | admin          | banco     | agenda        | dias
+#offer      | platform-postgres | 4130  | platform_admin | offer     | 0 3 * * *     | 14
+#trinketos  | <contêiner>       | 5432  | <admin>        | trinketos | 0 */6 * * *   | 7

@@ -76,15 +76,19 @@ Para atualizar depois de uma mudança na receita: `git pull && scripts/up.sh`.
 | `scripts/validate.sh`                            | Confere todo `compose.yaml` contra os padrões, sem subir nada             |
 | `scripts/bootstrap.sh`                           | Cria as redes Docker da plataforma (idempotente)                          |
 | `scripts/postgres-create-db.sh <nome> <arquivo>` | Cria banco e usuário próprios de um produto                               |
-| `scripts/postgres-backup.sh [pasta] [dias]`      | Dump comprimido de todos os bancos, com retenção (padrão 7 dias)          |
+| `scripts/backup-run.sh <nome>`                   | Backup de um alvo de `backups.list`: dump, verificação, envio ao R2 e retenção |
+| `scripts/backup-cron.sh [--apply]`               | Mostra ou instala a agenda (cron) de cada alvo                            |
+| `scripts/backup-restore.sh <nome> <latest\|arquivo> <banco>` | Restaura do R2 em um banco novo                          |
 
 ## Estrutura do projeto
 
 ```
 infra-vps/
 ├── platform/
-│   └── postgres/          # compose.yaml e .env.example
-├── scripts/               # up, bootstrap, validate, postgres-*
+│   ├── postgres/          # compose.yaml e .env.example
+│   └── backup/            # r2.env.example
+├── backups.list           # bancos com backup: contêiner, agenda e retenção
+├── scripts/               # up, bootstrap, validate, postgres-*, backup-*
 ├── docs/
 │   └── padroes.md         # nomes, redes, portas, recursos, segredos e dados
 └── services.list          # o que sobe, em ordem

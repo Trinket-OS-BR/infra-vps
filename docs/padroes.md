@@ -47,5 +47,5 @@ Só em `.env`/`.env.production` na VPS (600), fora do Git. Senha gerada na VPS (
 ## 6. Dados
 
 - Um banco e um usuário por produto (`scripts/postgres-create-db.sh`); o usuário da aplicação é dono só do seu banco e `PUBLIC` não conecta nos outros.
-- Backup lógico diário (`scripts/postgres-backup.sh`, 7 dias). Backup que não foi restaurado uma vez não conta como backup.
+- Backup de todo banco em `backups.list` (agenda e retenção por banco), enviado ao R2 (`scripts/backup-run.sh`, `backup-cron.sh`). Credenciais do R2 só em `/srv/secrets/r2.env` (600). Backup que não foi restaurado uma vez (`scripts/backup-restore.sh`) não conta como backup.
 - Acesso administrativo por `docker exec` ou túnel SSH; nunca porta aberta.
