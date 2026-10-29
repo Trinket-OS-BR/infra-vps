@@ -89,9 +89,12 @@ Para atualizar depois de uma mudança na receita: `git pull && scripts/up.sh`.
 infra-vps/
 ├── platform/
 │   ├── postgres/          # compose.yaml e .env.example
+│   ├── proxy/             # Caddy: compose.yaml, Caddyfile e .env.example
+│   │                      #   (única entrada HTTP/HTTPS da VPS)
 │   └── backup/            # modelos de r2.env e heartbeat.env
 ├── backups.list           # bancos com backup: contêiner, agenda (systemd) e retenção
-├── scripts/               # up, bootstrap, validate, postgres-*, backup-*
+├── apps/                  # um serviço por produto/ambiente (ex.: offer/production/web)
+├── scripts/               # up, bootstrap, deploy-service, validate, postgres-*, backup-*
 ├── docs/
 │   └── padroes.md         # nomes, redes, portas, recursos, segredos e dados
 └── services.list          # o que sobe, em ordem

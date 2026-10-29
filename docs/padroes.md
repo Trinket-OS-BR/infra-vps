@@ -18,8 +18,8 @@ Valem para tudo que roda na VPS (somente produção). `scripts/validate.sh` cobr
 ## 2. Redes e portas [auto]
 
 - `data`: interna (sem internet), onde ficam os bancos e quem os consome.
-- `proxy`: tráfego HTTP vindo do Caddy (entra com o proxy).
-- Só o proxy publica porta no host. Todo o resto usa `expose`.
+- `proxy`: tráfego HTTP vindo do Caddy (`platform/proxy`) e saída das apps para a internet.
+- Só o proxy (`platform/proxy`: 80, 443 TCP e 443 UDP) publica porta no host. Todo o resto usa `expose`.
 - Portas internas fora do padrão, em faixa observável, registradas aqui antes de criar o compose:
 
 | Faixa | Uso | Atribuídas |

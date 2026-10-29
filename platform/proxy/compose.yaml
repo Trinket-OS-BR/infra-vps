@@ -1,0 +1,49 @@
+# Proxy reverso (Caddy): única porta de entrada da VPS. Recebe 80/443, emite e renova o HTTPS sozinho
+# e repassa cada domínio ao contêiner certo pela rede `proxy`. Domínios e e-mail vêm do .env (fora do Git).
+# Para publicar outro serviço: um bloco novo no Caddyfile e `scripts/up.sh platform/proxy`.
+name: platform-proxy
+
+services:
+  proxy:
+    image: caddy:2-alpine
+    container_name: platform-proxy
+    restart: unless-stopped
+    init: true
+    env_file: [.env]
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - platform-proxy-data:/data # certificados: nunca apague, há limite de emissões por domínio
+      - platform-proxy-config:/config
+    networks: [proxy]
+    mem_limit: 128m
+    cpus: 0.5
+    pids_limit: 100
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:2019/config/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    labels:
+      app.product: platform
+      app.service: proxy
+      app.environment: production
+
+volumes:
+  platform-proxy-data:
+  platform-proxy-config:
+
+networks:
+  proxy:
+    external: true
+    name: proxy

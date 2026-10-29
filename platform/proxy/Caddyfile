@@ -1,0 +1,19 @@
+# Um bloco por domínio. Nomes e e-mail vêm do .env (variáveis de ambiente do contêiner).
+{
+	email {$ACME_EMAIL}
+}
+
+{$OFFER_DOMAIN} {
+	encode zstd gzip
+	log
+	header {
+		-Server
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+	# Se o Offer cair, o proxy responde 502 e volta sozinho quando o /api/health passar de novo.
+	reverse_proxy offer-web-production:4101 {
+		health_uri /api/health
+		health_interval 30s
+	}
+}

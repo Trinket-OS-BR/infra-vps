@@ -1,4 +1,7 @@
 # Serviços que a VPS mantém de pé, na ordem de subida (uma pasta por linha; # desliga).
 # Entram um a um, só depois que o anterior estiver estável.
 platform/postgres
-#apps/offer/production/web   # habilite depois de criar .env e .env.production (ver apps/offer/production/web/*.example)
+# O Offer exige .env e .env.production na pasta (o deploy do CI grava os dois).
+apps/offer/production/web
+# O proxy vem por último: só recebe tráfego de quem já está de pé. Exige platform/proxy/.env.
+platform/proxy
