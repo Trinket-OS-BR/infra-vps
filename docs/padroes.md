@@ -47,5 +47,5 @@ Só em `.env`/`.env.production` na VPS (600), fora do Git. Senha gerada na VPS (
 ## 6. Dados
 
 - Um banco e um usuário por produto (`scripts/postgres-create-db.sh`); o usuário da aplicação é dono só do seu banco e `PUBLIC` não conecta nos outros.
-- Backup de todo banco em `backups.list` (agenda e retenção por banco), enviado ao R2 (`scripts/backup-run.sh`, `backup-cron.sh`). Credenciais do R2 só em `/srv/secrets/r2.env` (600). Backup que não foi restaurado uma vez (`scripts/backup-restore.sh`) não conta como backup.
+- Backup de todo banco em `backups.list`, cada um com a sua agenda (timer do systemd) e retenção: `pg_dump -Fc` verificado, enviado com **Restic** (criptografado) ao R2, `restic forget --prune` e **heartbeat obrigatório** (sem sinal, o monitor avisa). Credenciais só em `/etc/infra-backup` (600). Nunca aplique expiração de objetos do R2 sobre um repositório Restic. Backup que não foi restaurado uma vez (`scripts/backup-restore.sh`) não conta como backup.
 - Acesso administrativo por `docker exec` ou túnel SSH; nunca porta aberta.

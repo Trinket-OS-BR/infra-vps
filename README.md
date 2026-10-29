@@ -32,7 +32,8 @@ As aplicações (como o Offer) têm repositórios próprios e se conectam a esta
 | Servidor       | Ubuntu LTS em uma VPS                       |
 | Contêineres    | Docker e Docker Compose                      |
 | Banco de dados | PostgreSQL 16 (Alpine)                       |
-| Automação      | Scripts Bash                                 |
+| Automação      | Scripts Bash e timers do systemd             |
+| Backup         | pg_dump + Restic (criptografado) no Cloudflare R2 |
 | Entrega        | Git: clone na VPS, `git pull` para atualizar |
 
 ## Como executar na VPS
@@ -76,9 +77,10 @@ Para atualizar depois de uma mudança na receita: `git pull && scripts/up.sh`.
 | `scripts/validate.sh`                            | Confere todo `compose.yaml` contra os padrões, sem subir nada             |
 | `scripts/bootstrap.sh`                           | Cria as redes Docker da plataforma (idempotente)                          |
 | `scripts/postgres-create-db.sh <nome> <arquivo>` | Cria banco e usuário próprios de um produto                               |
-| `scripts/backup-run.sh <nome>`                   | Backup de um alvo de `backups.list`: dump, verificação, envio ao R2 e retenção |
-| `scripts/backup-cron.sh [--apply]`               | Mostra ou instala a agenda (cron) de cada alvo                            |
-| `scripts/backup-restore.sh <nome> <latest\|arquivo> <banco>` | Restaura do R2 em um banco novo                          |
+| `scripts/backup-init.sh <nome>`                  | Prepara um alvo: senha de criptografia e repositório Restic no R2         |
+| `scripts/backup-run.sh <nome>`                   | Backup de um alvo: dump, verificação, Restic para o R2, retenção e heartbeat |
+| `scripts/backup-systemd.sh [--apply]`            | Mostra ou instala o timer do systemd de cada alvo (agenda por banco)      |
+| `scripts/backup-restore.sh <nome> <latest\|id> <banco>` | Restaura um snapshot em um banco novo                              |
 
 ## Estrutura do projeto
 
@@ -86,8 +88,8 @@ Para atualizar depois de uma mudança na receita: `git pull && scripts/up.sh`.
 infra-vps/
 ├── platform/
 │   ├── postgres/          # compose.yaml e .env.example
-│   └── backup/            # r2.env.example
-├── backups.list           # bancos com backup: contêiner, agenda e retenção
+│   └── backup/            # modelos de r2.env e heartbeat.env
+├── backups.list           # bancos com backup: contêiner, agenda (systemd) e retenção
 ├── scripts/               # up, bootstrap, validate, postgres-*, backup-*
 ├── docs/
 │   └── padroes.md         # nomes, redes, portas, recursos, segredos e dados
