@@ -17,3 +17,19 @@
 		health_interval 30s
 	}
 }
+
+# Painel de observabilidade (OpenObserve). Tem login próprio; recomenda-se também uma camada de acesso no DNS/CDN.
+{$LOGS_DOMAIN} {
+	encode zstd gzip
+	log
+	header {
+		-Server
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+	reverse_proxy platform-openobserve:4140 {
+		health_uri /healthz
+		health_interval 30s
+	}
+}
