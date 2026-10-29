@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1254 1254" width="512" height="512" role="img" aria-label="Infra VPS">
+  <title>Infra VPS</title>
+  <rect width="1254" height="1254" fill="#0D2A31"/>
+  <g fill="#F6EFDD">
+    <polygon points="93,294 488,439 627,580 765,439 1160,294 1064,428 796,531 695,642 695,893 627,965 558,893 558,642 457,531 189,428"/>
+    <polygon points="221,479 443,564 515,653 515,684 313,605"/>
+    <polygon points="1033,479 811,564 739,653 739,684 941,605"/>
+  </g>
+  <g fill="#0D2A31">
+    <rect x="552" y="712" width="149" height="18"/>
+    <rect x="552" y="782" width="149" height="18"/>
+    <rect x="552" y="852" width="149" height="18"/>
+  </g>
+  <polygon points="627,305 722,401 627,498 531,401" fill="#F2A43A"/>
+  <g fill="#F2A43A">
+    <circle cx="627" cy="685" r="9"/>
+    <circle cx="627" cy="756" r="9"/>
+    <circle cx="627" cy="826" r="9"/>
+  </g>
+</svg>

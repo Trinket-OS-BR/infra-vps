@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/assets/icon.svg" alt="Ícone do Infra VPS" width="150"/>
+
 # Infra VPS
 
 ### A receita da VPS do ecossistema Trinket OS.
