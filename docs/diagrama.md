@@ -2,36 +2,36 @@
 
 Mapa de tudo que roda e de como as peças se falam. Os diagramas abaixo são texto (Mermaid) e o GitHub os desenha.
 
-> **Regra: todo escopo novo atualiza este diagrama no mesmo trabalho.** Serviço novo (`platform/` ou `apps/`), banco, domínio, integração externa, rotina de backup ou etapa de pipeline entram aqui **antes** de o trabalho ser dado como concluído. O `scripts/validate.sh` falha se um serviço do repositório não aparecer em `docs/diagrama.md`. A fonte versionada é `docs/diagrama.md` no repositório; esta página é a mesma cópia, para leitura na Wiki.
+> **Regra: todo escopo novo atualiza este diagrama no mesmo trabalho.** Serviço de plataforma novo (`platform/`), tipo novo de app, banco, domínio, integração externa, rotina de backup ou etapa de pipeline entram aqui **antes** de o trabalho ser dado como concluído. O `scripts/validate.sh` falha se um serviço de `platform/` não aparecer em `docs/diagrama.md`. A fonte versionada é `docs/diagrama.md` no repositório; esta página é a mesma cópia, para leitura na Wiki.
 
 ## 1. Arquitetura (o que roda e em quais redes)
 
 ```mermaid
 flowchart LR
-  visitante([Visitante]) -->|HTTPS| cf["Cloudflare<br/>proxy ligado, SSL Full strict"]
+  visitante([Visitante]) -->|HTTPS| cf["CDN / proxy de DNS<br/>(ex.: Cloudflare, SSL Full strict)"]
   cf -->|80, 443| proxy
 
   subgraph vps["VPS (Docker)"]
     subgraph rproxy["rede proxy (entrada e saída)"]
       proxy["platform-proxy<br/>Caddy · 80/443 · HTTPS automático"]
-      offer["offer-web-production<br/>:4101"]
+      app["[produto]-[serviço]-production<br/>porta interna 41xx"]
     end
     subgraph rdata["rede data (interna, sem internet)"]
       postgres[("platform-postgres<br/>:4130")]
     end
-    proxy -->|reverse_proxy| offer
-    offer -->|"DATABASE_URL (rede data)"| postgres
+    proxy -->|reverse_proxy| app
+    app -->|"DATABASE_URL (rede data)"| postgres
   end
 
-  offer -->|"uploads WebP"| r2[("Armazenamento de objetos")]
-  proxy -.->|"emite e renova certificado"| le["Let's Encrypt"]
+  app -->|"arquivos enviados"| r2[("Armazenamento de objetos (opcional)")]
+  proxy -.->|"emite e renova certificado"| le["Autoridade de certificados"]
 ```
 
 | Serviço | Pasta | Redes | Porta interna | Publicada no host |
 |---|---|---|---|---|
 | proxy | `platform/proxy` | proxy | — | 80, 443, 443/udp |
 | postgres | `platform/postgres` | data | 4130 | não |
-| offer | `apps/offer/production/web` | proxy, data | 4101 | não |
+| app (um por produto e serviço) | `apps/<produto>/production/<serviço>` | proxy, data | 4100–4129 | não |
 
 ## 2. CI/CD (do push ao ar)
 
@@ -44,7 +44,7 @@ flowchart LR
   build --> scan["scan<br/>Trivy"]
   build --> deploy["deploy<br/>SSH + deploy-service.sh"]
   deploy -->|"pull da tag"| ghcr
-  deploy --> vps["VPS: offer<br/>healthy ou rollback"]
+  deploy --> vps["VPS: app<br/>healthy ou rollback"]
   deploy --> smoke["smoke<br/>URL pública"]
   quality & audit & build & scan & deploy & smoke --> notify["notify<br/>Discord, sempre"]
 ```
@@ -81,11 +81,11 @@ Veja a [Wiki](https://github.com/Trinket-OS-BR/infra-vps/wiki), páginas 1 a 15.
 
 1. Edite `docs/diagrama.md` no repositório: acrescente o serviço ao diagrama 1 e à tabela, e as etapas ou ligações novas aos outros.
 2. Rode `scripts/validate.sh`: ele acusa serviço que ainda não está no diagrama.
-3. Copie o conteúdo para esta página (mantenha a regra do topo e a seção 5).
+3. Copie o conteúdo para esta página (mantenha a regra do topo).
 4. Registre a mudança no histórico abaixo.
 
 ## 7. Histórico
 
 | Data | Mudança |
 |---|---|
-| 2026-10-29 | Versão inicial: proxy, postgres, offer, CI/CD, backup e acesso administrativo. |
+| 2026-10-29 | Versão inicial: proxy, postgres, app, CI/CD, backup e acesso administrativo. |

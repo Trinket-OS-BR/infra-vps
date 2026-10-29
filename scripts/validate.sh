@@ -20,9 +20,11 @@ for f in $(find platform apps -name compose.yaml 2>/dev/null | sort); do
   have ':latest'                    && problems+=("usa :latest")
   have '^\s+ports:'                 && ! [[ "$f" == platform/proxy/* ]] && problems+=("publica porta no host")
   have ':-(admin|password|senha)'   && problems+=("senha padrão no compose")
-  # todo serviço precisa constar no diagrama (platform/<nome> ou apps/<produto>/...)
-  svc=$(echo "$f" | awk -F/ '{print $2}')
-  grep -qiw "$svc" docs/diagrama.md 2>/dev/null || problems+=("serviço \"$svc\" não consta em docs/diagrama.md")
+  # todo serviço de plataforma precisa constar no diagrama (apps seguem o padrão genérico do nó "app")
+  if [[ "$f" == platform/* ]]; then
+    svc=$(echo "$f" | awk -F/ '{print $2}')
+    grep -qiw "$svc" docs/diagrama.md 2>/dev/null || problems+=("serviço \"$svc\" não consta em docs/diagrama.md")
+  fi
   dir=$(dirname "$f"); tmp=0
   for e in .env .env.production; do
     grep -q "$e" "$f" && [ ! -e "$dir/$e" ] && { : > "$dir/$e"; tmp=1; created+=("$dir/$e"); }
