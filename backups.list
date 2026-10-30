@@ -10,4 +10,4 @@
 #
 # nome      | contêiner         | porta | admin | banco     | agenda                                      | retenção
 #offer      | platform-postgres | 4130  | -     | offer     | *-*-* 03:00:00 America/Sao_Paulo            | 14d/4/3
-#trinketos  | <contêiner>       | 5432  | -     | trinketos | *-*-* 00,06,12,18:00:00 America/Sao_Paulo   | 7d/4/3
+trinketos  | platform-postgres | 4130  | -     | trinketos | *-*-* 00,06,12,18:00:00 America/Sao_Paulo   | 7d/4/3
