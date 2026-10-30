@@ -106,3 +106,4 @@ Veja a [Wiki](https://github.com/Trinket-OS-BR/infra-vps/wiki), páginas 1 a 18.
 | 2026-10-29 | OpenObserve preparado (desligado): logs, métricas e traces por OTLP, uma organização e um usuário por produto. |
 | 2026-10-29 | OpenObserve no ar: o painel sai pelo proxy atrás de uma camada de acesso (controle de acesso do DNS/CDN, só o administrador); os apps enviam traces pela rede `data`; alertas por organização com destino de chat. |
 | 2026-10-29 | RabbitMQ no ar (um vhost por produto). TrinketOS API ganha receita em `apps/trinketos/production/api`: dados pela rede `data`, credenciais de infraestrutura só na VPS, deploy pelo padrão de etapas reutilizáveis. |
+| 2026-10-30 | TrinketOS web ganha receita em `apps/trinketos/production/web` (porta 4111): chama a API pela rede `data`; telemetria pronta, ligada só ao criar o arquivo de observabilidade do serviço. |

@@ -11,5 +11,7 @@ platform/observability
 apps/offer/production/web
 # TrinketOS API: exige .env, .env.production e /srv/secrets/trinketos-api-infra.env (make-infra-env.sh).
 apps/trinketos/production/api
+# TrinketOS web: exige .env e .env.production na pasta (o deploy do CI grava os dois); chama a API pela rede data.
+apps/trinketos/production/web
 # O proxy vem por último: só recebe tráfego de quem já está de pé. Exige platform/proxy/.env.
 platform/proxy
