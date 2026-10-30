@@ -16,6 +16,7 @@ services:
       - "443:443/udp" # HTTP/3
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./sites:/etc/caddy/sites:ro
       - platform-proxy-data:/data # certificados: nunca apague, há limite de emissões por domínio
       - platform-proxy-config:/config
     networks: [proxy]

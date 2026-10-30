@@ -1,0 +1,60 @@
+# Sites do produto TrinketOS. Ficam em sites-disponiveis/ de propósito: só entram no ar quando o DNS já aponta
+# para esta VPS, porque o Caddy tenta emitir o certificado assim que o bloco existe (e tentativas falhas contam
+# no limite de emissões). Para ligar ou desligar: scripts/proxy-site.sh enable|disable trinketos
+# Os domínios vêm do .env do proxy (fora do Git), como no restante da plataforma.
+
+(cabecalhos) {
+	encode zstd gzip
+	log
+	header {
+		-Server
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+}
+
+# Interface web do produto.
+{$TRINKETOS_WEB_DOMAIN} {
+	import cabecalhos
+	reverse_proxy trinketos-web-production:4111 {
+		health_uri /api/health
+		health_interval 30s
+	}
+}
+
+# API. O WebSocket (STOMP/SockJS) passa pelo mesmo bloco: o Caddy repassa o upgrade sozinho.
+# Pré-requisito: o contêiner da API estar também na rede `proxy` (hoje só está na `data`).
+{$TRINKETOS_API_DOMAIN} {
+	import cabecalhos
+	reverse_proxy trinketos-api-production:4110 {
+		health_uri /actuator/health
+		health_interval 30s
+	}
+}
+
+# Painel interno (Workspace).
+{$TRINKETOS_WORKSPACE_DOMAIN} {
+	import cabecalhos
+	reverse_proxy trinketos-workspace-production:4112 {
+		health_uri /api/health
+		health_interval 30s
+	}
+}
+
+# Storybook do design system.
+{$TRINKETOS_DESIGN_DOMAIN} {
+	import cabecalhos
+	reverse_proxy trinketos-design-production:4113 {
+		health_uri /healthz
+		health_interval 30s
+	}
+}
+
+# Plataforma de capacitação (Learn).
+{$TRINKETOS_LEARN_DOMAIN} {
+	import cabecalhos
+	reverse_proxy trinketos-learn-production:4114 {
+		health_uri /api/health
+		health_interval 30s
+	}
+}

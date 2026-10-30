@@ -3,6 +3,9 @@
 	email {$ACME_EMAIL}
 }
 
+# Conjuntos de sites ligados por scripts/proxy-site.sh (copiados de sites-disponiveis/). Sem arquivos, não faz nada.
+import sites/*.caddy
+
 {$OFFER_DOMAIN} {
 	encode zstd gzip
 	log
