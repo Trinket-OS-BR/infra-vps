@@ -13,5 +13,7 @@ apps/offer/production/web
 apps/trinketos/production/api
 # TrinketOS web: exige .env e .env.production na pasta (o deploy do CI grava os dois); chama a API pela rede data.
 apps/trinketos/production/web
+# TrinketOS workspace: exige .env e .env.production na pasta (o deploy do CI grava os dois); chama a API pela rede data.
+apps/trinketos/production/workspace
 # O proxy vem por último: só recebe tráfego de quem já está de pé. Exige platform/proxy/.env.
 platform/proxy
