@@ -19,7 +19,7 @@ flowchart LR
     subgraph rdata["rede data (interna, sem internet)"]
       postgres[("platform-postgres<br/>:4130")]
       redis[("platform-redis<br/>:4131 · 1 usuário ACL por produto")]
-      rabbit[("platform-rabbitmq (preparado, desligado)<br/>AMQP 4132 · STOMP 4133 · 1 vhost por produto")]
+      rabbit[("platform-rabbitmq (no ar)<br/>AMQP 4132 · STOMP 4133 · 1 vhost por produto")]
       obs[("platform-openobserve (no ar)<br/>:4140 · 1 organização por produto")]
     end
     proxy -->|reverse_proxy| app
@@ -39,7 +39,7 @@ flowchart LR
 | proxy | `platform/proxy` | proxy | — | 80, 443, 443/udp |
 | postgres | `platform/postgres` | data | 4130 | não |
 | redis | `platform/redis` | data | 4131 | não |
-| rabbitmq (preparado) | `platform/rabbitmq` | data | 4132, 4133, 4134 | não |
+| rabbitmq | `platform/rabbitmq` | data | 4132, 4133, 4134 | não |
 | observability / openobserve | `platform/observability` | data, proxy | 4140, 4141 | não |
 | app (um por produto e serviço) | `apps/<produto>/production/<serviço>` | proxy, data | 4100–4129 | não |
 
@@ -105,3 +105,4 @@ Veja a [Wiki](https://github.com/Trinket-OS-BR/infra-vps/wiki), páginas 1 a 18.
 | 2026-10-29 | RabbitMQ com STOMP preparado (desligado): um vhost e um usuário por produto. |
 | 2026-10-29 | OpenObserve preparado (desligado): logs, métricas e traces por OTLP, uma organização e um usuário por produto. |
 | 2026-10-29 | OpenObserve no ar: o painel sai pelo proxy atrás de uma camada de acesso (controle de acesso do DNS/CDN, só o administrador); os apps enviam traces pela rede `data`; alertas por organização com destino de chat. |
+| 2026-10-29 | RabbitMQ no ar (um vhost por produto). TrinketOS API ganha receita em `apps/trinketos/production/api`: dados pela rede `data`, credenciais de infraestrutura só na VPS, deploy pelo padrão de etapas reutilizáveis. |

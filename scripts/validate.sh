@@ -29,7 +29,7 @@ for f in $(find platform apps -name compose.yaml 2>/dev/null | sort); do
   for e in .env .env.production; do
     grep -q "$e" "$f" && [ ! -e "$dir/$e" ] && { : > "$dir/$e"; tmp=1; created+=("$dir/$e"); }
   done
-  (cd "$dir" && IMAGE_TAG=validate docker compose config --quiet 2>/dev/null) || problems+=("docker compose config falhou (ou docker parado)")
+  (cd "$dir" && IMAGE_TAG=validate IMAGE_OWNER=validate docker compose config --quiet 2>/dev/null) || problems+=("docker compose config falhou (ou docker parado)")
   [ "$tmp" = 1 ] && { rm -f "${created[@]}"; created=(); }
   if [ ${#problems[@]} -eq 0 ]; then echo "OK     $f"; else fail=1; echo "FALHA  $f"; printf '         - %s\n' "${problems[@]}"; fi
 done

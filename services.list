@@ -3,11 +3,13 @@
 platform/postgres
 # Exige platform/redis/.env (senha do administrador, gerada na VPS).
 platform/redis
-# Preparado e testado, mas DESLIGADO. Para ligar: criar platform/rabbitmq/.env e tirar o # da linha abaixo.
-#platform/rabbitmq
+# Exige platform/rabbitmq/.env (senha do administrador, gerada na VPS).
+platform/rabbitmq
 # Exige platform/observability/.env (senha do administrador, gerada na VPS).
 platform/observability
 # O Offer exige .env e .env.production na pasta (o deploy do CI grava os dois).
 apps/offer/production/web
+# TrinketOS API: exige .env, .env.production e /srv/secrets/trinketos-api-infra.env (make-infra-env.sh).
+apps/trinketos/production/api
 # O proxy vem por último: só recebe tráfego de quem já está de pé. Exige platform/proxy/.env.
 platform/proxy
