@@ -1,0 +1,44 @@
+# TrinketOS design (Storybook compilado, servido por nginx). Imagem pronta do GHCR; sem build na VPS.
+# Não usa banco, Redis nem RabbitMQ e não chama a API: só entrega arquivos estáticos.
+# Porta interna 4113 (docs/padroes.md). Quem recebe tráfego HTTP é o proxy; aqui nada é publicado.
+#
+# Sem telemetria de aplicação: é nginx servindo arquivos, não há o que instrumentar. O acesso fica nos logs
+# do contêiner (json-file) até existir coletor de logs.
+name: trinketos-design-production
+
+services:
+  design:
+    image: ghcr.io/${IMAGE_OWNER:?IMAGE_OWNER obrigatoria}/${IMAGE_NAME:-design-trinketos}:${IMAGE_TAG:?IMAGE_TAG obrigatoria}
+    container_name: trinketos-design-production
+    restart: unless-stopped
+    init: true
+    env_file:
+      - .env.production
+    expose: ["4113"]
+    networks: [proxy]
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    mem_limit: 128m
+    cpus: 0.25
+    pids_limit: 100
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4113/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    labels:
+      app.product: trinketos
+      app.service: design
+      app.environment: production
+
+networks:
+  proxy:
+    external: true
+    name: proxy
