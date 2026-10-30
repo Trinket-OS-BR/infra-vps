@@ -6,7 +6,7 @@
 
 ### A receita da VPS do ecossistema Trinket OS.
 
-Serviços de plataforma (começando pelo PostgreSQL) descritos em Docker Compose, padronizados em nomes, redes, portas, limites de recursos e *healthchecks*, e que sobem com um único comando.
+Serviços de plataforma (PostgreSQL, Redis, RabbitMQ, observabilidade, proxy e backup) e as aplicações do ecossistema descritos em Docker Compose, padronizados em nomes, redes, portas, limites de recursos e *healthchecks*, e que sobem com um único comando.
 
 [Repositório](https://github.com/Trinket-OS-BR/infra-vps) · [Wiki (passo a passo)](https://github.com/Trinket-OS-BR/infra-vps/wiki) · [Contato](mailto:support@trinket.com.br)
 
@@ -23,7 +23,16 @@ O **Infra VPS** é a fonte única do que roda na VPS de produção. Em vez de co
 - **Nenhum segredo vai para o Git.** O repositório tem só os `*.example`; senhas são geradas na VPS e ficam em arquivos com permissão 600.
 - Só o proxy publica portas no host. Bancos ficam em uma rede Docker interna, sem acesso à internet.
 
-As aplicações (como o Offer) têm repositórios próprios e se conectam a esta infraestrutura pelas redes Docker.
+As aplicações têm repositórios próprios e se conectam a esta infraestrutura pelas redes Docker. Aqui ficam só a receita de cada serviço (`apps/<produto>/production/<serviço>`) e o deploy; o código e a esteira de build ficam no repositório de cada aplicação.
+
+## O que roda hoje
+
+| Produto   | Serviços (porta interna)                                                    | Dados que usa                                        |
+| --------- | --------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Offer     | web (4101)                                                                  | PostgreSQL (uploads vão para o R2)                   |
+| TrinketOS | api (4110), web (4111), workspace (4112), design (4113), learn (4114)        | só a API usa PostgreSQL, Redis e RabbitMQ; os demais chamam a API |
+
+Plataforma compartilhada: PostgreSQL (4130), Redis, RabbitMQ com STOMP, OpenObserve (4140 e 4141) e o proxy Caddy, a única entrada HTTP/HTTPS. Cada produto tem banco, usuário Redis, vhost RabbitMQ e organização de observabilidade próprios.
 
 ## Tecnologias
 
@@ -32,6 +41,10 @@ As aplicações (como o Offer) têm repositórios próprios e se conectam a esta
 | Servidor       | Ubuntu LTS em uma VPS                       |
 | Contêineres    | Docker e Docker Compose                      |
 | Banco de dados | PostgreSQL 16 (Alpine)                       |
+| Cache e filas  | Redis e RabbitMQ (AMQP e STOMP)              |
+| Observabilidade | OpenObserve (OTLP: logs, métricas e traces) |
+| Entrada        | Caddy (HTTPS automático, sites por produto)  |
+| Imagens e CI/CD | GitHub Actions e GitHub Container Registry (GHCR) |
 | Automação      | Scripts Bash e timers do systemd             |
 | Backup         | pg_dump + Restic (criptografado) no Cloudflare R2 |
 | Entrega        | Git: clone na VPS, `git pull` para atualizar |
@@ -69,11 +82,23 @@ Pré-requisito: VPS com Docker e o usuário `deploy` configurados (passo a passo
 
 Para atualizar depois de uma mudança na receita: `git pull && scripts/up.sh`.
 
+## Como uma aplicação é publicada
+
+Cada aplicação tem uma esteira em etapas no próprio repositório (qualidade, build da imagem, varredura de vulnerabilidades, deploy, smoke test e aviso), que dispara no *push* da branch `main`. A etapa de deploy:
+
+1. grava na VPS o `.env.production` do serviço, a partir de um secret do repositório;
+2. chama `scripts/deploy-service.sh <produto> <serviço> <tag>`, que troca a imagem, espera o serviço ficar *healthy* e, se falhar, **volta sozinho para a tag anterior**;
+3. o smoke test confere a URL pública. Ele só roda se a variável de repositório `KVM4_SMOKE_ENABLED` for `true`, e cada serviço tem a sua URL e o seu caminho de saúde (`/actuator/health` na API, `/api/health` nos apps Next, `/healthz` no Storybook).
+
+Rollback manual: dispare a esteira com `workflow_dispatch` informando a tag (`image_tag`) a reimplantar. As variáveis de infraestrutura (banco, Redis, RabbitMQ) ficam em `/srv/secrets` na VPS e nunca vão para o secret da aplicação.
+
 ## Comandos principais
 
 | Comando                                          | Descrição                                                                 |
 | ------------------------------------------------ | ------------------------------------------------------------------------- |
 | `scripts/up.sh [pasta]`                          | Sobe os serviços de `services.list` (ou só a pasta indicada) e espera ficarem *healthy* |
+| `scripts/deploy-service.sh <produto> <serviço> <tag>` | Troca a imagem de um serviço, espera ficar *healthy* e volta sozinho para a tag anterior se falhar |
+| `scripts/proxy-site.sh enable\|disable\|status <nome>` | Liga ou desliga um conjunto de sites do proxy; valida antes de recarregar e desfaz se falhar |
 | `scripts/validate.sh`                            | Confere todo `compose.yaml` contra os padrões, sem subir nada             |
 | `scripts/bootstrap.sh`                           | Cria as redes Docker da plataforma (idempotente)                          |
 | `scripts/postgres-create-db.sh <nome> <arquivo>` | Cria banco e usuário próprios de um produto                               |
@@ -99,11 +124,12 @@ infra-vps/
 │   ├── rabbitmq/          # RabbitMQ + STOMP (preparado): compose.yaml, rabbitmq.conf e enabled_plugins
 │   ├── observability/     # OpenObserve (logs, métricas, traces): compose.yaml e .env.example
 │   ├── proxy/             # Caddy: compose.yaml, Caddyfile e .env.example
-│   │                      #   (única entrada HTTP/HTTPS da VPS)
+│   │                      #   (única entrada HTTP/HTTPS da VPS); sites-disponiveis/ guarda os
+│   │                      #   sites por produto, ligados por scripts/proxy-site.sh
 │   └── backup/            # modelos de r2.env e heartbeat.env
 ├── backups.list           # bancos com backup: contêiner, agenda (systemd) e retenção
-├── apps/                  # um serviço por produto/ambiente (ex.: offer/production/web)
-├── scripts/               # up, bootstrap, deploy-service, validate, postgres-*, backup-*
+├── apps/                  # um serviço por produto/ambiente (offer/production/web, trinketos/production/{api,web,workspace,design,learn})
+├── scripts/               # up, bootstrap, deploy-service, proxy-site, validate, postgres-*, redis-*, rabbitmq-*, observability-*, backup-*
 ├── docs/
 │   ├── padroes.md         # nomes, redes, portas, recursos, segredos e dados
 │   └── diagrama.md        # diagrama da plataforma (atualizar a cada escopo novo)
@@ -112,7 +138,7 @@ infra-vps/
 
 ## Padrões
 
-Contêineres `platform-<serviço>` e `<produto>-<serviço>-production`; rede `data` interna; portas internas fora do padrão em faixa observável (apps 4100–4129, dados 4130–4139); limites de CPU e memória em todo serviço; imagens sempre versionadas. Regras completas em [docs/padroes.md](docs/padroes.md).
+Contêineres `platform-<serviço>` e `<produto>-<serviço>-production`; redes `data` (interna, sem internet) e `proxy`; portas internas fora do padrão em faixa observável (apps 4100–4129, dados 4130–4139); limites de CPU e memória em todo serviço; imagens sempre versionadas. Regras completas em [docs/padroes.md](docs/padroes.md).
 
 ## Como contribuir
 
