@@ -109,3 +109,4 @@ Veja a [Wiki](https://github.com/Trinket-OS-BR/infra-vps/wiki), páginas 1 a 18.
 | 2026-10-30 | TrinketOS web ganha receita em `apps/trinketos/production/web` (porta 4111): chama a API pela rede `data`; telemetria pronta, ligada só ao criar o arquivo de observabilidade do serviço. |
 | 2026-10-30 | TrinketOS Workspace ganha receita em `apps/trinketos/production/workspace` (porta 4112): painel que só fala com a API pela rede `data` (sem banco, Redis nem RabbitMQ); telemetria pronta, desligada. |
 | 2026-10-30 | TrinketOS design ganha receita em `apps/trinketos/production/design` (porta 4113): Storybook estático em nginx, só rede `proxy`, sem dados nem API. |
+| 2026-10-30 | TrinketOS learn ganha receita em `apps/trinketos/production/learn` (porta 4114): Next.js que só fala com a API pela rede `data` (sem banco, Redis nem RabbitMQ); telemetria pronta, desligada. |
