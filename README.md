@@ -43,7 +43,9 @@ Plataforma compartilhada: PostgreSQL (4130), Redis, RabbitMQ com STOMP, OpenObse
 | Banco de dados | PostgreSQL 16 (Alpine)                       |
 | Cache e filas  | Redis e RabbitMQ (AMQP e STOMP)              |
 | Observabilidade | OpenObserve (OTLP: logs, métricas e traces) |
-| Entrada        | Caddy (HTTPS automático, sites por produto)  |
+| Entrada        | Caddy (HTTPS automático, sites por produto) atrás da Cloudflare (DNS e proxy, SSL Full strict) |
+| Acesso ao painel | Cloudflare Zero Trust (Access) + login do OpenObserve |
+| Armazenamento de objetos | Cloudflare R2: uploads dos apps e backups (Restic) |
 | Imagens e CI/CD | GitHub Actions e GitHub Container Registry (GHCR) |
 | Automação      | Scripts Bash e timers do systemd             |
 | Backup         | pg_dump + Restic (criptografado) no Cloudflare R2 |
@@ -81,6 +83,15 @@ Pré-requisito: VPS com Docker e o usuário `deploy` configurados (passo a passo
    ```
 
 Para atualizar depois de uma mudança na receita: `git pull && scripts/up.sh`.
+
+## Segurança e acesso
+
+- **Zero Trust:** o painel de observabilidade só é alcançado depois de uma política do Cloudflare Zero Trust (Access) que libera o administrador; o login do OpenObserve é a segunda camada.
+- **Sem porta de administração aberta:** acesso por SSH com chave (usuário sem root) ou túnel SSH; só o proxy publica portas no host.
+- **R2:** uploads dos apps e backups usam credenciais separadas. O backup é criptografado pelo Restic antes de sair da VPS.
+- **Segredos:** nada vai para o Git. Variáveis de infraestrutura ficam em `/srv/secrets` na VPS; as da aplicação, em secrets do repositório dela.
+
+O mapa completo, com redes, fluxos e CI/CD, está em [docs/diagrama.md](docs/diagrama.md).
 
 ## Como uma aplicação é publicada
 

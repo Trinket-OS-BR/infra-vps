@@ -8,7 +8,9 @@ Mapa de tudo que roda e de como as peças se falam. Os diagramas abaixo são tex
 
 ```mermaid
 flowchart LR
-  visitante([Visitante]) -->|HTTPS| cf["CDN / proxy de DNS<br/>(ex.: Cloudflare, SSL Full strict)"]
+  visitante([Visitante]) -->|HTTPS| cf["Cloudflare<br/>DNS e proxy · SSL Full strict"]
+  admin([Administrador]) -->|"painel de observabilidade"| zt["Cloudflare Zero Trust (Access)<br/>só o administrador passa"]
+  zt --> cf
   cf -->|80, 443| proxy
 
   subgraph vps["VPS (Docker)"]
@@ -27,10 +29,10 @@ flowchart LR
     app -->|"REDIS_URL (só o prefixo do produto)"| redis
     app -.->|"AMQP ou STOMP relay (só o vhost do produto)"| rabbit
     app -.->|"OTLP: logs, métricas e traces (só a organização do produto)"| obs
-    proxy -->|"painel (atrás do controle de acesso)"| obs
+    proxy -->|"painel (já autenticado pelo Zero Trust, mais o login do OpenObserve)"| obs
   end
 
-  app -->|"arquivos enviados"| r2[("Armazenamento de objetos (opcional)")]
+  app -->|"arquivos enviados (credencial própria)"| r2[("Cloudflare R2<br/>uploads dos apps · opcional")]
   proxy -.->|"emite e renova certificado"| le["Autoridade de certificados"]
 ```
 
@@ -66,7 +68,7 @@ flowchart LR
   timer["timer systemd<br/>1 por banco"] --> run["backup-run.sh"]
   run -->|"pg_dump -Fc"| postgres[("platform-postgres")]
   run -->|"pg_restore --list<br/>(valida o dump)"| run
-  run -->|"restic backup + forget"| repo[("Repositório Restic<br/>armazenamento de objetos")]
+  run -->|"restic backup + forget"| repo[("Cloudflare R2<br/>repositório Restic, criptografado")]
   run -->|"heartbeat"| hb["serviço de heartbeat"]
   restore["backup-restore.sh"] -->|"restic restore"| repo
   restore --> postgres
@@ -81,9 +83,14 @@ flowchart LR
   vps -->|"docker exec / psql"| postgres[("platform-postgres")]
   vps -->|"git pull"| repo["infra-vps (GitHub)"]
   ci(["GitHub Actions"]) -->|"SSH com chave do CI"| vps
-  eu -->|"painel: controle de acesso do DNS/CDN + login do OpenObserve"| cdn["CDN / controle de acesso"]
+  eu -->|"painel: Zero Trust (Access) + login do OpenObserve"| cdn["Cloudflare Zero Trust (Access)"]
   cdn --> vps
 ```
+
+Notas de segurança:
+
+- **Zero Trust:** o painel de observabilidade só é alcançado depois de uma política do Cloudflare Zero Trust (Access) que libera o administrador; o login do OpenObserve é a segunda camada. Nenhuma porta de administração fica aberta na VPS: o acesso é por SSH com chave ou por túnel SSH.
+- **R2:** é o único armazenamento de objetos da plataforma. Os **uploads** dos apps e os **backups** (repositório Restic, criptografado) usam credenciais separadas (as dos apps ficam no secret de cada aplicação; as do backup, em `platform/backup`).
 
 ## 5. Onde cada escopo está documentado
 
@@ -109,4 +116,5 @@ Veja a [Wiki](https://github.com/Trinket-OS-BR/infra-vps/wiki), páginas 1 a 18.
 | 2026-10-30 | TrinketOS web ganha receita em `apps/trinketos/production/web` (porta 4111): chama a API pela rede `data`; telemetria pronta, ligada só ao criar o arquivo de observabilidade do serviço. |
 | 2026-10-30 | TrinketOS Workspace ganha receita em `apps/trinketos/production/workspace` (porta 4112): painel que só fala com a API pela rede `data` (sem banco, Redis nem RabbitMQ); telemetria pronta, desligada. |
 | 2026-10-30 | TrinketOS design ganha receita em `apps/trinketos/production/design` (porta 4113): Storybook estático em nginx, só rede `proxy`, sem dados nem API. |
+| 2026-10-30 | Diagramas passam a nomear o Cloudflare R2 (uploads e backups) e o Cloudflare Zero Trust (Access) na frente do painel de observabilidade. |
 | 2026-10-30 | TrinketOS learn ganha receita em `apps/trinketos/production/learn` (porta 4114): Next.js que só fala com a API pela rede `data` (sem banco, Redis nem RabbitMQ); telemetria pronta, desligada. |
