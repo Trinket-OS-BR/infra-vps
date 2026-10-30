@@ -26,7 +26,7 @@ services:
     expose: ["4110"]
     # Só `data` até a virada: sem `proxy` o contêiner não tem saída para a internet, então a cópia
     # dos dados de produção não consegue enviar e-mail nem webhook. Na virada, acrescente `proxy`.
-    networks: [data]
+    networks: [data, proxy]
     mem_limit: 1280m
     cpus: 1.5
     pids_limit: 400
@@ -47,6 +47,9 @@ services:
       app.environment: production
 
 networks:
+  proxy:
+    external: true
+    name: proxy
   data:
     external: true
     name: data
