@@ -1,8 +1,8 @@
 # Site dos ebooks (Caddy servindo arquivos estáticos). Imagem pronta do GHCR; sem build na VPS.
-# Não usa banco, Redis nem RabbitMQ e não chama API: só entrega arquivos.
+# Não usa banco, Redis nem RabbitMQ e não chama API: só entrega arquivos. A rede `data` é só para enviar traces ao OpenObserve.
 # Porta interna 4121 (docs/padroes.md). Quem recebe tráfego HTTP é o platform-proxy; aqui nada é publicado.
 #
-# Sem telemetria de aplicação: é um servidor de arquivos. O acesso fica nos logs do contêiner (json-file).
+# Telemetria: o Caddy envia um trace por requisição ao OpenObserve (organização `ebooks`, por gRPC na 4141). O acesso também fica nos logs do contêiner (json-file).
 name: ebooks-web-production
 
 services:
@@ -11,10 +11,15 @@ services:
     container_name: ebooks-web-production
     restart: unless-stopped
     init: true
+    # Credenciais de observabilidade só na VPS (scripts/observability-create-org.sh ebooks ...); sem o arquivo, o site sobe sem enviar dados.
     env_file:
       - .env.production
+      - path: /srv/secrets/ebooks-web-observability.env
+        required: false
+    environment:
+      - OTEL_SERVICE_NAME=ebooks-web-production
     expose: ["4121"]
-    networks: [proxy]
+    networks: [proxy, data]
     read_only: true
     tmpfs:
       - /tmp:size=16m,mode=1777
@@ -41,3 +46,6 @@ networks:
   proxy:
     external: true
     name: proxy
+  data:
+    external: true
+    name: data
