@@ -19,5 +19,7 @@ apps/trinketos/production/workspace
 apps/trinketos/production/design
 # TrinketOS learn: exige .env e .env.production na pasta (o deploy do CI grava os dois); chama a API pela rede data.
 apps/trinketos/production/learn
+# Ebooks (site estático em Caddy): exige .env e .env.production na pasta (o deploy do CI grava os dois).
+apps/ebooks/production/web
 # O proxy vem por último: só recebe tráfego de quem já está de pé. Exige platform/proxy/.env.
 platform/proxy

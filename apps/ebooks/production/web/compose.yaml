@@ -1,0 +1,43 @@
+# Site dos ebooks (Caddy servindo arquivos estáticos). Imagem pronta do GHCR; sem build na VPS.
+# Não usa banco, Redis nem RabbitMQ e não chama API: só entrega arquivos.
+# Porta interna 4121 (docs/padroes.md). Quem recebe tráfego HTTP é o platform-proxy; aqui nada é publicado.
+#
+# Sem telemetria de aplicação: é um servidor de arquivos. O acesso fica nos logs do contêiner (json-file).
+name: ebooks-web-production
+
+services:
+  web:
+    image: ghcr.io/${IMAGE_OWNER:?IMAGE_OWNER obrigatoria}/${IMAGE_NAME:-ebooks-site}:${IMAGE_TAG:?IMAGE_TAG obrigatoria}
+    container_name: ebooks-web-production
+    restart: unless-stopped
+    init: true
+    env_file:
+      - .env.production
+    expose: ["4121"]
+    networks: [proxy]
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    mem_limit: 64m
+    cpus: 0.25
+    pids_limit: 100
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4121/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    labels:
+      app.product: ebooks
+      app.service: web
+      app.environment: production
+
+networks:
+  proxy:
+    external: true
+    name: proxy
