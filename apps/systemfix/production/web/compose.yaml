@@ -1,6 +1,8 @@
-# System Fix Service (site estático exportado pelo Next e servido por nginx sem privilégios). Imagem pronta do GHCR; sem build na VPS.
-# Não usa banco, Redis nem RabbitMQ e não chama API: só entrega arquivos. Fica só na rede `proxy`.
-# Porta interna 4123 (docs/padroes.md): o nginx.conf da imagem precisa escutar em 4123. Quem recebe tráfego HTTP é o platform-proxy; aqui nada é publicado.
+# System Fix Service (site estático exportado pelo Next e servido por Caddy sem privilégios). Imagem pronta do GHCR; sem build na VPS.
+# Não usa banco, Redis nem RabbitMQ e não chama API: só entrega arquivos. A rede `data` é só para enviar traces ao OpenObserve.
+# Porta interna 4123 (docs/padroes.md). Quem recebe tráfego HTTP é o platform-proxy; aqui nada é publicado.
+#
+# Telemetria: o Caddy envia um trace por requisição ao OpenObserve (organização `systemfix`, por gRPC na 4141). O acesso também fica nos logs do contêiner (json-file).
 name: systemfix-web-production
 
 services:
@@ -9,10 +11,15 @@ services:
     container_name: systemfix-web-production
     restart: unless-stopped
     init: true
+    # Credenciais de observabilidade só na VPS (scripts/observability-create-org.sh systemfix ...); sem o arquivo, o site sobe sem enviar dados.
     env_file:
       - .env.production
+      - path: /srv/secrets/systemfix-web-observability.env
+        required: false
+    environment:
+      - OTEL_SERVICE_NAME=systemfix-web-production
     expose: ["4123"]
-    networks: [proxy]
+    networks: [proxy, data]
     read_only: true
     tmpfs:
       - /tmp:size=16m,mode=1777
@@ -39,3 +46,6 @@ networks:
   proxy:
     external: true
     name: proxy
+  data:
+    external: true
+    name: data
