@@ -23,5 +23,7 @@ apps/trinketos/production/learn
 apps/ebooks/production/web
 # Portfólio (site estático em Caddy): exige .env e .env.production na pasta (o deploy do CI grava os dois).
 apps/portfolio/production/web
+# System Fix (site estático em nginx): exige .env e .env.production na pasta (o deploy do CI grava os dois).
+apps/systemfix/production/web
 # O proxy vem por último: só recebe tráfego de quem já está de pé. Exige platform/proxy/.env.
 platform/proxy

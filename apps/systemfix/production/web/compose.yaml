@@ -1,0 +1,41 @@
+# System Fix Service (site estático exportado pelo Next e servido por nginx sem privilégios). Imagem pronta do GHCR; sem build na VPS.
+# Não usa banco, Redis nem RabbitMQ e não chama API: só entrega arquivos. Fica só na rede `proxy`.
+# Porta interna 4123 (docs/padroes.md): o nginx.conf da imagem precisa escutar em 4123. Quem recebe tráfego HTTP é o platform-proxy; aqui nada é publicado.
+name: systemfix-web-production
+
+services:
+  web:
+    image: ghcr.io/${IMAGE_OWNER:?IMAGE_OWNER obrigatoria}/${IMAGE_NAME:-system-fix}:${IMAGE_TAG:?IMAGE_TAG obrigatoria}
+    container_name: systemfix-web-production
+    restart: unless-stopped
+    init: true
+    env_file:
+      - .env.production
+    expose: ["4123"]
+    networks: [proxy]
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    mem_limit: 64m
+    cpus: 0.25
+    pids_limit: 100
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4123/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    labels:
+      app.product: systemfix
+      app.service: web
+      app.environment: production
+
+networks:
+  proxy:
+    external: true
+    name: proxy
