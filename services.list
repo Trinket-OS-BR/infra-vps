@@ -21,5 +21,7 @@ apps/trinketos/production/design
 apps/trinketos/production/learn
 # Ebooks (site estático em Caddy): exige .env e .env.production na pasta (o deploy do CI grava os dois).
 apps/ebooks/production/web
+# Portfólio (site estático em Caddy): exige .env e .env.production na pasta (o deploy do CI grava os dois).
+apps/portfolio/production/web
 # O proxy vem por último: só recebe tráfego de quem já está de pé. Exige platform/proxy/.env.
 platform/proxy

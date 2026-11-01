@@ -24,7 +24,7 @@ Valem para tudo que roda na VPS (somente produção). `scripts/validate.sh` cobr
 
 | Faixa | Uso | Atribuídas |
 |---|---|---|
-| 4100–4129 | aplicações (uma dezena por produto) | offer web 4101; trinketos api 4110, web 4111, workspace 4112, design 4113, learn 4114; ebooks web 4121 |
+| 4100–4129 | aplicações (uma dezena por produto) | offer web 4101; trinketos api 4110, web 4111, workspace 4112, design 4113, learn 4114; ebooks web 4121; portfolio web 4122 |
 | 4130–4139 | dados | postgres 4130, redis 4131, rabbitmq 4132 (AMQP), 4133 (STOMP), 4134 (gestão) |
 | 4140–4149 | observabilidade | openobserve 4140 (painel, API e OTLP HTTP), 4141 (OTLP gRPC) |
 

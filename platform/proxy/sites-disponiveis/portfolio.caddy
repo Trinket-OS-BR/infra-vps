@@ -1,0 +1,18 @@
+# Portfólio de Antonio Silva. Fica em sites-disponiveis/ de propósito: só entra no ar quando o DNS já aponta para esta VPS,
+# porque o Caddy tenta emitir o certificado assim que o bloco existe (e tentativas falhas contam no limite de
+# emissões). Para ligar ou desligar: scripts/proxy-site.sh enable|disable portfolio
+# O domínio vem do .env do proxy (PORTFOLIO_DOMAIN, fora do Git), como no restante da plataforma.
+
+{$PORTFOLIO_DOMAIN} {
+	encode zstd gzip
+	log
+	header {
+		-Server
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+	reverse_proxy portfolio-web-production:4122 {
+		health_uri /healthz
+		health_interval 30s
+	}
+}
