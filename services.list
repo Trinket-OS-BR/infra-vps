@@ -23,7 +23,11 @@ apps/trinketos/production/learn
 apps/ebooks/production/web
 # Portfólio (site estático em Caddy): exige .env e .env.production na pasta (o deploy do CI grava os dois).
 apps/portfolio/production/web
-# System Fix (site estático em nginx): exige .env e .env.production na pasta (o deploy do CI grava os dois).
+# System Fix (site estático em Caddy): exige .env e .env.production na pasta (o deploy do CI grava os dois).
 apps/systemfix/production/web
+# Pixel Election Arena API (Redis compartilhado): exige .env, .env.production e /srv/secrets/pea-redis.env (scripts/redis-create-user.sh).
+apps/pea/production/api
+# Pixel Election Arena web (Caddy, encaminha /api para a API pela rede data): exige .env e .env.production na pasta.
+apps/pea/production/web
 # O proxy vem por último: só recebe tráfego de quem já está de pé. Exige platform/proxy/.env.
 platform/proxy

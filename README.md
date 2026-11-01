@@ -33,6 +33,7 @@ As aplicações têm repositórios próprios e se conectam a esta infraestrutura
 | Ebooks    | web (4121)                                                                  | nenhum (site estático)                               |
 | Portfólio | web (4122)                                                                  | nenhum (site estático)                               |
 | System Fix | web (4123)                                                                | nenhum (site estático)                               |
+| Pixel Election Arena | api (4124), web (4125)                                        | a API usa o Redis compartilhado (usuário `pea`); o web chama a API pela rede data |
 | TrinketOS | api (4110), web (4111), workspace (4112), design (4113), learn (4114)        | só a API usa PostgreSQL, Redis e RabbitMQ; os demais chamam a API |
 
 Plataforma compartilhada: PostgreSQL (4130), Redis, RabbitMQ com STOMP, OpenObserve (4140 e 4141) e o proxy Caddy, a única entrada HTTP/HTTPS. Cada produto tem banco, usuário Redis, vhost RabbitMQ e organização de observabilidade próprios.

@@ -1,0 +1,58 @@
+# Pixel Election Arena, API do contador (Node). Imagem pronta do GHCR; sem build na VPS.
+# Dados: Redis compartilhado da plataforma (usuário ACL `pea`, chaves `pea:*`), pela rede interna `data`.
+# O placar (`pea:hits`) não tem TTL de propósito: a política volatile-lru só descarta chaves com TTL.
+# Porta interna 4124 (docs/padroes.md). Quem fala com ela é o `pea-web-production`; aqui nada é publicado.
+#
+# Credenciais ficam só na VPS (nunca no CI):
+#   /srv/secrets/pea-redis.env          scripts/redis-create-user.sh pea /srv/secrets/pea-redis.env
+#   /srv/secrets/pea-observability.env  scripts/observability-create-org.sh pea /srv/secrets/pea-observability.env
+# Sem o primeiro a API não conecta e não fica healthy (o deploy falha e volta sozinho); sem o segundo sobe sem enviar traces.
+name: pea-api-production
+
+services:
+  api:
+    image: ghcr.io/${IMAGE_OWNER:?IMAGE_OWNER obrigatoria}/${IMAGE_NAME:-pixel-election-arena-api}:${IMAGE_TAG:?IMAGE_TAG obrigatoria}
+    container_name: pea-api-production
+    restart: unless-stopped
+    init: true
+    env_file:
+      - .env.production
+      # Sem este arquivo a API não acha o Redis e não fica healthy: o deploy falha e volta sozinho.
+      - path: /srv/secrets/pea-redis.env
+        required: false
+      - path: /srv/secrets/pea-observability.env
+        required: false
+    environment:
+      - PORT=4124
+      # Um processo por núcleo seria 4 aqui; o contêiner tem 1 CPU, então 2 bastam (a API só lê/escreve no Redis).
+      - WORKERS=2
+      - RATE_LIMIT_PER_MINUTE=300
+      - OTEL_SERVICE_NAME=pea-api-production
+    expose: ["4124"]
+    networks: [data]
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    mem_limit: 384m
+    cpus: 1.0
+    pids_limit: 100
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4124/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    labels:
+      app.product: pea
+      app.service: api
+      app.environment: production
+
+networks:
+  data:
+    external: true
+    name: data

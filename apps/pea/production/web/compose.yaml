@@ -1,0 +1,51 @@
+# Pixel Election Arena, site (Vite estático) servido por Caddy sem privilégios, que também encaminha /api/* para a API
+# (`pea-api-production`, rede `data`) e /_vercel/insights/* para o Vercel Analytics. Imagem pronta do GHCR; sem build na VPS.
+# Porta interna 4125 (docs/padroes.md). Quem recebe tráfego HTTP é o platform-proxy; aqui nada é publicado.
+#
+# Telemetria: o Caddy envia um trace por requisição ao OpenObserve (organização `pea`, por gRPC na 4141).
+# O arquivo trimado (formato gRPC) fica em /srv/secrets/pea-web-observability.env; sem ele o site sobe sem enviar dados.
+name: pea-web-production
+
+services:
+  web:
+    image: ghcr.io/${IMAGE_OWNER:?IMAGE_OWNER obrigatoria}/${IMAGE_NAME:-pixel-election-arena-web}:${IMAGE_TAG:?IMAGE_TAG obrigatoria}
+    container_name: pea-web-production
+    restart: unless-stopped
+    init: true
+    env_file:
+      - .env.production
+      - path: /srv/secrets/pea-web-observability.env
+        required: false
+    environment:
+      - OTEL_SERVICE_NAME=pea-web-production
+    expose: ["4125"]
+    networks: [proxy, data]
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    mem_limit: 96m
+    cpus: 0.5
+    pids_limit: 100
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4125/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    labels:
+      app.product: pea
+      app.service: web
+      app.environment: production
+
+networks:
+  proxy:
+    external: true
+    name: proxy
+  data:
+    external: true
+    name: data
