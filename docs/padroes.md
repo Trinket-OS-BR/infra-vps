@@ -57,3 +57,17 @@ Só em `.env`/`.env.production` na VPS (600), fora do Git. Senha gerada na VPS (
 ## 7. Diagrama
 
 Todo escopo novo (serviço, banco, domínio, integração externa, rotina de backup ou etapa de pipeline) atualiza [diagrama.md](diagrama.md) no mesmo trabalho. `scripts/validate.sh` falha se um serviço não constar nele. A mesma mudança vai para a página 15 da Wiki.
+
+## Origem atrás da Cloudflare
+
+- **Estado em 01/11/2026 (verificado de fora):** o IP da VPS (187.41.103.163) aceita HTTPS direto em `443` e responde `200` para os sites por `--resolve` (ex.: `curl -sk --resolve pea.antoniobsilva.com.br:443:187.41.103.163 https://pea.antoniobsilva.com.br/`). **Não há trava que limite a origem à Cloudflare**; nada no `platform/proxy/Caddyfile` nem registrado no vault a aplica.
+- **Consequência:** quem acessar o IP direto contorna o WAF e as regras da Cloudflare e pode forjar `CF-Connecting-IP`, que o PEA usa no limite de envios por IP.
+- **Caminhos possíveis (escolher um e registrar aqui):** (1) Authenticated Origin Pulls: ligar na zona e exigir o certificado de cliente da Cloudflare no Caddy (`client_auth` com o CA de origin pull); (2) firewall da VPS liberando `443` só para as faixas de IP da Cloudflare (lista publicada em cloudflare.com/ips); (3) os dois.
+- **Teste de aceite:** o `curl` acima deve falhar (recusa ou erro de handshake) e o site pelo domínio deve continuar abrindo.
+
+## Registro de migrações
+
+| Data | Produto | Resumo |
+|---|---|---|
+| 01/11/2026 | System Fix | Site estático em Caddy (4123) na VPS nova, traces no OpenObserve; container e imagem antigos removidos. |
+| 01/11/2026 | PEA | API (4124) e web (4125) na VPS nova, Redis compartilhado (usuário `pea`, chaves `pea:*`, sem TTL no placar), traces no OpenObserve; web em Caddy encaminha `/api` e `/_vercel/insights`; sem micro-cache (a API já manda `s-maxage=5`); contêineres, volume e imagens antigos removidos. |
