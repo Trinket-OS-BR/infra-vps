@@ -64,6 +64,30 @@ Todo escopo novo (serviço, banco, domínio, integração externa, rotina de bac
 - **Consequência:** quem acessar o IP direto contorna o WAF e as regras da Cloudflare e pode forjar `CF-Connecting-IP`, que o PEA usa no limite de envios por IP.
 - **Caminhos possíveis (escolher um e registrar aqui):** (1) Authenticated Origin Pulls: ligar na zona e exigir o certificado de cliente da Cloudflare no Caddy (`client_auth` com o CA de origin pull); (2) firewall da VPS liberando `443` só para as faixas de IP da Cloudflare (lista publicada em cloudflare.com/ips); (3) os dois.
 - **Teste de aceite:** o `curl` acima deve falhar (recusa ou erro de handshake) e o site pelo domínio deve continuar abrindo.
+- **Plano para o caminho (1), preparado em 02/11/2026 e ainda não aplicado:**
+  1. Todo domínio servido pelo Caddy precisa estar com proxy ligado (nuvem laranja) e SSL em "Full (strict)". Um domínio só DNS (cinza) deixa de abrir com a trava. O `status` não conta: aponta para o Better Stack, não para esta VPS.
+  2. Baixar o CA de origin pull da Cloudflare (`authenticated_origin_pull_ca.pem`, publicado na documentação da Cloudflare) para uma pasta montada no contêiner `platform-proxy`, somente leitura. Sem esse arquivo, o Caddy não sobe: nunca importar a trava antes de o arquivo existir.
+  3. Criar um snippet no `Caddyfile` e importá-lo em cada bloco de site (`import cloudflare_only`):
+     ```
+     (cloudflare_only) {
+     	tls {
+     		client_auth {
+     			mode require_and_verify
+     			trust_pool file /etc/caddy/cloudflare-origin-pull-ca.pem
+     		}
+     	}
+     }
+     ```
+     A diretiva `trust_pool` vale para versões recentes do Caddy; em versões antigas é `trusted_ca_cert_file`. Conferir a versão da imagem `caddy:2-alpine` antes (`caddy version`).
+  4. Ligar "Authenticated Origin Pulls" na zona da Cloudflare, aplicar em todos os sites de uma vez, validar com `caddy validate` antes de recarregar e rodar o teste de aceite acima em cada domínio.
+  5. Risco: a emissão de certificados pelo Caddy segue pelo desafio HTTP na porta 80, que a trava não atinge. Se a renovação falhar, olhar o log do `platform-proxy` antes de mexer na trava.
+- **Alternativa mais simples (caminho 2):** regra de firewall liberando `443` só para as faixas da Cloudflare. Não depende de arquivo nem de versão do Caddy, mas a lista de faixas muda e precisa de rotina de atualização.
+
+## Medição de visitas (Cloudflare Web Analytics)
+
+- **Estado em 02/11/2026:** `antoniobsilva.com.br` e `carioca-lanches.com.br` têm medição automática (sem script). `trinketos.antoniobsilva.com.br` é um registro antigo, sem proxy e sem script, com zero visitas. `ebooks`, `pea` e `trinket.com.br` não têm entrada.
+- **Como ler:** a aba "Análise" da zona conta requisições que passam pela Cloudflare, inclusive robôs e os monitores do Better Stack, e superestima visitantes. Para pessoas reais, usar o Web Analytics (beacon).
+- **Regra:** um só medidor por site. O PEA já usa o Vercel Analytics no código; não somar o da Cloudflare ali sem decidir.
 
 ## Registro de migrações
 
