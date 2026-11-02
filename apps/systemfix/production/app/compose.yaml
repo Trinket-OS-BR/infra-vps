@@ -1,0 +1,49 @@
+# System Fix Service, painel (Next.js standalone). Imagem pronta do GHCR; sem build na VPS.
+# Chama a API pela rede interna `data` (API_URL) e só recebe tráfego do gateway (`systemfix-web-production`),
+# que serve a landing page em / e encaminha o resto das rotas para cá. Porta interna 4126 (docs/padroes.md).
+# O painel não precisa de internet nem de segredos: sessão e tokens ficam em cookies e na API.
+name: systemfix-app-production
+
+services:
+  app:
+    image: ghcr.io/${IMAGE_OWNER:?IMAGE_OWNER obrigatoria}/${IMAGE_NAME:-system-fix-app}:${IMAGE_TAG:?IMAGE_TAG obrigatoria}
+    container_name: systemfix-app-production
+    restart: unless-stopped
+    init: true
+    # ADMIN_ORIGIN (origem pública do painel, ex.: https://dominio) é gravado pelo deploy neste arquivo.
+    env_file:
+      - .env.production
+    environment:
+      - NODE_ENV=production
+      - HOSTNAME=0.0.0.0
+      - PORT=4126
+      - API_URL=http://systemfix-api-production:4127
+    expose: ["4126"]
+    networks: [data]
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+      - /app/apps/web/.next/cache:size=32m,mode=1777
+    mem_limit: 384m
+    cpus: 0.5
+    pids_limit: 100
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4126/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    labels:
+      app.product: systemfix
+      app.service: app
+      app.environment: production
+
+networks:
+  data:
+    external: true
+    name: data

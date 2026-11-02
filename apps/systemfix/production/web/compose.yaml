@@ -1,6 +1,8 @@
-# System Fix Service (site estático exportado pelo Next e servido por Caddy sem privilégios). Imagem pronta do GHCR; sem build na VPS.
-# Não usa banco, Redis nem RabbitMQ e não chama API: só entrega arquivos. A rede `data` é só para enviar traces ao OpenObserve.
+# System Fix Service, gateway público (Caddy sem privilégios). Imagem pronta do GHCR; sem build na VPS.
+# A landing page (exportação estática do Next) é a página inicial; o gateway serve os arquivos dela e encaminha
+# o resto das rotas ao painel (`systemfix-app-production:4126`), que fala com a API. Sem banco, Redis nem RabbitMQ aqui.
 # Porta interna 4123 (docs/padroes.md). Quem recebe tráfego HTTP é o platform-proxy; aqui nada é publicado.
+# A rede `data` serve para alcançar o painel e para enviar traces ao OpenObserve.
 #
 # Telemetria: o Caddy envia um trace por requisição ao OpenObserve (organização `systemfix`, por gRPC na 4141). O acesso também fica nos logs do contêiner (json-file).
 name: systemfix-web-production
