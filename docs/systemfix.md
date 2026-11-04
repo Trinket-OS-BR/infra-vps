@@ -26,21 +26,22 @@ A landing page é a página inicial. O painel começa em `/login` e, depois do l
    ```bash
    scripts/postgres-create-db.sh systemfix /srv/secrets/systemfix-db.env
    scripts/redis-create-user.sh systemfix /srv/secrets/systemfix-redis.env
-   apps/systemfix/production/api/make-infra-env.sh
+   bash apps/systemfix/production/api/make-infra-env.sh
    ```
    O último junta os dois em `systemfix-api-infra.env` (a API em execução usa o papel restrito `system_fix_runtime`) e cria `systemfix-migrate.env`, com a conexão administrativa que só a migração usa.
 2. Em cada pasta `api`, `app` e `web` de `apps/systemfix/production`, copie `.env.example` para `.env` e preencha `IMAGE_OWNER` (minúsculas). O deploy do CI grava `IMAGE_TAG` e `.env.production`.
-3. Migração do banco, depois que a primeira imagem da API existir no GHCR (o deploy da API falha e volta sozinho sem as tabelas):
+3. No repositório do produto, execute o workflow de produção com `publish_only=true` para validar e publicar as imagens antes de liberar o primeiro deploy. Depois que a imagem da API existir no GHCR, use o SHA publicado como `IMAGE_TAG` na tarefa de migração:
+
    ```bash
    cd apps/systemfix/production/api
-   docker compose --profile migrate run --rm migrate
-   cd ../../../.. && apps/systemfix/production/api/make-infra-env.sh --cleanup
+   IMAGE_TAG=<sha-publicado> docker compose --profile migrate run --rm --pull always migrate
+   cd ../../../.. && bash apps/systemfix/production/api/make-infra-env.sh --cleanup
    ```
    A migração cria o papel `system_fix_runtime` e define a senha dele a partir de `systemfix-runtime.pass`. Apague `systemfix-migrate.env` em seguida: ele guarda a senha do administrador.
 4. Cadastro inicial do SUPER_ADMIN (opcional, só enquanto precisar): adicione `PLATFORM_SETUP_TOKEN` ao `.env.production` da API **na VPS** (nunca no CI; gere com `pnpm setup:platform-key` no repositório do produto) e reinicie. Depois do cadastro, remova a linha.
 5. Observabilidade (opcional): `scripts/observability-create-org.sh systemfix /srv/secrets/systemfix-web-observability.env` liga os traces do gateway.
 
-## Variáveis do GitHub (ambiente KVM4)
+## Variáveis do repositório no GitHub
 
 `KVM4_SYSTEMFIX_URL` é a origem pública com `https://` e sem barra final. O deploy a grava como `ADMIN_ORIGIN` no painel, que a usa para recusar escritas vindas de outra origem. Sem ela o painel recusa todas as escritas em produção.
 
