@@ -24,7 +24,7 @@ Valem para tudo que roda na VPS (somente produção). `scripts/validate.sh` cobr
 
 | Faixa | Uso | Atribuídas |
 |---|---|---|
-| 4100–4129 | aplicações (uma dezena por produto) | offer web 4101; trinketos api 4110, web 4111, workspace 4112, design 4113, learn 4114; ebooks web 4121; portfolio web 4122; systemfix web 4123; pea api 4124, web 4125 |
+| 4100–4129 | aplicações (uma dezena por produto) | offer web 4101; trinketos api 4110, web 4111, workspace 4112, design 4113, learn 4114; ebooks web 4121; portfolio web 4122; systemfix web 4123, app 4126, api 4127; pea api 4124, web 4125 |
 | 4130–4139 | dados | postgres 4130, redis 4131, rabbitmq 4132 (AMQP), 4133 (STOMP), 4134 (gestão) |
 | 4140–4149 | observabilidade | openobserve 4140 (painel, API e OTLP HTTP), 4141 (OTLP gRPC) |
 
@@ -95,6 +95,7 @@ Todo escopo novo (serviço, banco, domínio, integração externa, rotina de bac
 |---|---|---|
 | 01/11/2026 | System Fix | Site estático em Caddy (4123) na VPS nova, traces no OpenObserve; container e imagem antigos removidos. |
 | 01/11/2026 | PEA | API (4124) e web (4125) na VPS nova, Redis compartilhado (usuário `pea`, chaves `pea:*`, sem TTL no placar), traces no OpenObserve; web em Caddy encaminha `/api` e `/_vercel/insights`; sem micro-cache (a API já manda `s-maxage=5`); contêineres, volume e imagens antigos removidos. |
+| 02/11/2026 | System Fix | Plataforma completa: gateway Caddy com a landing page em `/` (4123), painel Next.js (4126) e API Fastify (4127) com PostgreSQL e Redis compartilhados (usuário `systemfix`); deploy em três etapas com rollback; migrações manuais. Ver `docs/systemfix.md`. |
 
 ## Página de status (Better Stack)
 Página pública `status.antoniobsilva.com.br` no Better Stack (conta `t478697`, plano gratuito), com monitores HTTP a cada 3 minutos: API, Web, Learn e Workspace do TrinketOS, PEA (`/api/health`), System Fix, portfólio e ebooks. Seções por produto, em inglês e pt-BR. Todo serviço novo ganha um monitor e entra na seção do seu produto. O domínio próprio usa o CNAME `status` → `statuspage.betteruptime.com` no Cloudflare, em "Somente DNS" (com proxy dá 526); no ar desde 01/11/2026. Detalhes em `projetos/trinketos/limpeza-servidores-antigos-2026-11-01.md` no vault.

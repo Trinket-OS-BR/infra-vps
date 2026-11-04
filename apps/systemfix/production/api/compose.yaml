@@ -1,0 +1,83 @@
+# System Fix Service, API (Fastify). Imagem pronta do GHCR; sem build na VPS.
+# Dados: PostgreSQL e Redis da plataforma pela rede interna `data`. Porta interna 4127 (docs/padroes.md).
+# Quem fala com ela é o painel (`systemfix-app-production`); aqui nada é publicado e não há saída para a internet.
+#
+# Credenciais ficam só na VPS (nunca no CI). Passo a passo e migrações: docs/systemfix.md
+#   /srv/secrets/systemfix-db.env         scripts/postgres-create-db.sh systemfix /srv/secrets/systemfix-db.env
+#   /srv/secrets/systemfix-redis.env      scripts/redis-create-user.sh systemfix /srv/secrets/systemfix-redis.env
+#   /srv/secrets/systemfix-api-infra.env  apps/systemfix/production/api/make-infra-env.sh (junta os dois acima)
+# Sem o último a API não conecta e não fica healthy (o deploy falha e volta sozinho).
+name: systemfix-api-production
+
+services:
+  api:
+    image: ghcr.io/${IMAGE_OWNER:?IMAGE_OWNER obrigatoria}/${IMAGE_NAME:-system-fix-api}:${IMAGE_TAG:?IMAGE_TAG obrigatoria}
+    container_name: systemfix-api-production
+    restart: unless-stopped
+    init: true
+    env_file:
+      - .env.production
+      - path: /srv/secrets/systemfix-api-infra.env
+        required: false
+    environment:
+      - NODE_ENV=production
+      - HOST=0.0.0.0
+      - PORT=4127
+    expose: ["4127"]
+    networks: [data]
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    mem_limit: 384m
+    cpus: 0.5
+    pids_limit: 100
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4127/readyz"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    labels:
+      app.product: systemfix
+      app.service: api
+      app.environment: production
+
+  # Migrações do banco: tarefa manual (`docker compose --profile migrate run --rm migrate`), nunca sobe sozinha.
+  # Usa a conexão administrativa de /srv/secrets/systemfix-migrate.env, que existe só durante a migração.
+  migrate:
+    profiles: ["migrate"]
+    image: ghcr.io/${IMAGE_OWNER:?IMAGE_OWNER obrigatoria}/${IMAGE_NAME:-system-fix-api}:${IMAGE_TAG:?IMAGE_TAG obrigatoria}
+    container_name: systemfix-api-migrate
+    restart: "no"
+    init: true
+    command: ["node", "dist/database/migrate-cli.js"]
+    env_file:
+      - /srv/secrets/systemfix-migrate.env
+    environment:
+      - NODE_ENV=production
+    networks: [data]
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    mem_limit: 256m
+    cpus: 0.5
+    pids_limit: 100
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    labels:
+      app.product: systemfix
+      app.service: api-migrate
+      app.environment: production
+
+networks:
+  data:
+    external: true
+    name: data
