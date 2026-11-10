@@ -1,0 +1,3 @@
+# Tudo aqui roda em Linux: finais de linha LF em qualquer clone (um CRLF quebra script e Caddyfile na VPS).
+* text=auto eol=lf
+*.svg text eol=lf
