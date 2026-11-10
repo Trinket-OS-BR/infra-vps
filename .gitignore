@@ -6,3 +6,7 @@
 r2.env
 /secrets/
 deploy.log
+deploy.log.tmp
+.deploy.lock
+# Sites ligados na VPS: cópias feitas por scripts/proxy-site.sh a partir de sites-disponiveis/.
+/platform/proxy/sites/
