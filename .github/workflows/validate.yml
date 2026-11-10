@@ -23,6 +23,17 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Arquivos de ambiente vazios (só para o compose config achar os env_file)
+        run: |
+          # Os .env reais não estão no Git e nem existem no runner. Vazios bastam: a validação não lê valor.
+          for d in $(git ls-files '*compose.yaml' | xargs -n1 dirname); do
+            touch "$d/.env" "$d/.env.production"
+          done
+          sudo mkdir -p /srv/secrets
+          for f in $(grep -rhoE '/srv/secrets/[A-Za-z0-9._-]+\.env' --include=compose.yaml platform apps | sort -u); do
+            sudo touch "$f"
+          done
+
       - name: Padrões dos compose (docs/padroes.md)
         run: scripts/validate.sh
 
