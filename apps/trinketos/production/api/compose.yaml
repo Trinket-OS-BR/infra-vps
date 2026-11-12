@@ -19,6 +19,10 @@ services:
       # Sem o arquivo a API não acha o banco e não fica healthy: o deploy falha e volta sozinho.
       - path: /srv/secrets/trinketos-api-infra.env
         required: false
+      # Serviço de decisões em sombra (jev): token, endereço e chaves DECISIONS_*. Gravado na VPS por
+      # deploy/push-env.sh do repositório jev-trinketos; sem o arquivo a sombra fica desligada.
+      - path: /srv/secrets/trinketos-decisions.env
+        required: false
     environment:
       - SERVER_PORT=4110
       - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70 -javaagent:/app/opentelemetry-javaagent.jar
