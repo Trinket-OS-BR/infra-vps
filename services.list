@@ -11,6 +11,10 @@ platform/observability
 apps/offer/production/web
 # TrinketOS API: exige .env, .env.production e /srv/secrets/trinketos-api-infra.env (make-infra-env.sh).
 apps/trinketos/production/api
+# TrinketOS jev (serviço de decisões em sombra): fora desta lista de propósito. A imagem é construída na
+# estação e enviada por SSH (deploy/ship.sh do repositório jev-trinketos), então não há o que baixar aqui.
+# Exige /srv/secrets/trinketos-decisions.env (deploy/push-env.sh). Volta sozinho no boot (restart: unless-stopped).
+# apps/trinketos/production/jev
 # TrinketOS web: exige .env e .env.production na pasta (o deploy do CI grava os dois); chama a API pela rede data.
 apps/trinketos/production/web
 # TrinketOS workspace: exige .env e .env.production na pasta (o deploy do CI grava os dois); chama a API pela rede data.
