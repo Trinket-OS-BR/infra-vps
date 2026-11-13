@@ -1,0 +1,63 @@
+# Confere a receita em todo pull request: padrões dos compose, scripts, configuração do proxy e
+# o que não pode estar em um repositório público. Não fala com a VPS e não usa nenhum segredo.
+name: validate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Arquivos de ambiente vazios (só para o compose config achar os env_file)
+        run: |
+          # Os .env reais não estão no Git e nem existem no runner. Vazios bastam: a validação não lê valor.
+          for d in $(git ls-files '*compose.yaml' | xargs -n1 dirname); do
+            touch "$d/.env" "$d/.env.production"
+          done
+          sudo mkdir -p /srv/secrets
+          for f in $(grep -rhoE '/srv/secrets/[A-Za-z0-9._-]+\.env' --include=compose.yaml platform apps | sort -u); do
+            sudo touch "$f"
+          done
+
+      - name: Padrões dos compose (docs/padroes.md)
+        run: scripts/validate.sh
+
+      - name: Repositório público sem IP, chave ou .env real
+        run: scripts/check-public.sh
+
+      - name: Scripts (sintaxe e ShellCheck, só erros)
+        run: |
+          mapfile -t arquivos < <(git ls-files '*.sh')
+          for f in "${arquivos[@]}"; do bash -n "$f"; done
+          shellcheck --severity=error "${arquivos[@]}"
+
+      - name: Proxy (Caddyfile com todos os sites ligados)
+        run: |
+          # Liga todos os sites disponíveis e dá a cada variável de domínio um nome de exemplo: valida a sintaxe
+          # e as diretivas sem emitir certificado nem abrir porta.
+          mkdir -p platform/proxy/sites
+          cp platform/proxy/sites-disponiveis/*.caddy platform/proxy/sites/
+          : > caddy.env
+          i=0
+          for v in $(grep -rhoE '\{\$[A-Z0-9_]+\}' platform/proxy/Caddyfile platform/proxy/sites | tr -d '{$}' | sort -u); do
+            i=$((i + 1))
+            if [ "$v" = ACME_EMAIL ]; then echo "$v=ci@example.com" >> caddy.env; else echo "$v=site$i.example.com" >> caddy.env; fi
+          done
+          imagem=$(sed -nE 's/^\s+image:\s*(\S+).*/\1/p' platform/proxy/compose.yaml | head -1)
+          docker run --rm --env-file caddy.env -v "$PWD/platform/proxy:/etc/caddy:ro" "$imagem" \
+            caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile

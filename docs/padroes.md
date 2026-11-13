@@ -1,6 +1,8 @@
 # Padrões da plataforma
 
-Valem para tudo que roda na VPS (somente produção). `scripts/validate.sh` cobra as regras marcadas [auto]. Novos serviços entram um a um, só depois que o anterior estiver estável.
+Valem para tudo que roda na VPS (somente produção). `scripts/validate.sh` cobra as regras marcadas [auto], serviço por serviço, e roda em todo pull request (`.github/workflows/validate.yml`). Novos serviços entram um a um, só depois que o anterior estiver estável.
+
+Serviço com `profiles:` é tarefa manual (ex.: migração): não sobe com `up.sh` e não exige `restart` nem `healthcheck`; o resto vale igual. Volume sem `name:` explícito gera só aviso: dar nome a um volume que já tem dados cria outro, vazio, então a correção exige migração planejada.
 
 ## 1. Nomes [auto]
 
@@ -61,7 +63,7 @@ Todo escopo novo (serviço, banco, domínio, integração externa, rotina de bac
 
 ## Origem atrás da Cloudflare
 
-- **Estado em 01/11/2026 (verificado de fora):** o IP da VPS (187.41.103.163) aceita HTTPS direto em `443` e responde `200` para os sites por `--resolve` (ex.: `curl -sk --resolve pea.antoniobsilva.com.br:443:187.41.103.163 https://pea.antoniobsilva.com.br/`). **Não há trava que limite a origem à Cloudflare**; nada no `platform/proxy/Caddyfile` nem registrado no vault a aplica.
+- **Estado em 01/11/2026 (verificado de fora):** o IP da VPS aceita HTTPS direto em `443` e responde `200` para os sites por `--resolve` (ex.: `curl -sk --resolve <dominio>:443:<ip-da-vps> https://<dominio>/`). **Não há trava que limite a origem à Cloudflare**; nada no `platform/proxy/Caddyfile` a aplica. O IP nunca é escrito neste repositório (`scripts/check-public.sh` cobra).
 - **Consequência:** quem acessar o IP direto contorna o WAF e as regras da Cloudflare e pode forjar `CF-Connecting-IP`, que o PEA usa no limite de envios por IP.
 - **Caminhos possíveis (escolher um e registrar aqui):** (1) Authenticated Origin Pulls: ligar na zona e exigir o certificado de cliente da Cloudflare no Caddy (`client_auth` com o CA de origin pull); (2) firewall da VPS liberando `443` só para as faixas de IP da Cloudflare (lista publicada em cloudflare.com/ips); (3) os dois.
 - **Teste de aceite:** o `curl` acima deve falhar (recusa ou erro de handshake) e o site pelo domínio deve continuar abrindo.
@@ -99,4 +101,4 @@ Todo escopo novo (serviço, banco, domínio, integração externa, rotina de bac
 | 02/11/2026 | System Fix | Plataforma completa: gateway Caddy com a landing page em `/` (4123), painel Next.js (4126) e API Fastify (4127) com PostgreSQL e Redis compartilhados (usuário `systemfix`); deploy em três etapas com rollback; migrações manuais. Ver `docs/systemfix.md`. |
 
 ## Página de status (Better Stack)
-Página pública `status.antoniobsilva.com.br` no Better Stack (conta `t478697`, plano gratuito), com monitores HTTP a cada 3 minutos: API, Web, Learn e Workspace do TrinketOS, PEA (`/api/health`), System Fix, portfólio e ebooks. Seções por produto, em inglês e pt-BR. Todo serviço novo ganha um monitor e entra na seção do seu produto. O domínio próprio usa o CNAME `status` → `statuspage.betteruptime.com` no Cloudflare, em "Somente DNS" (com proxy dá 526); no ar desde 01/11/2026. Detalhes em `projetos/trinketos/limpeza-servidores-antigos-2026-11-01.md` no vault.
+Página pública `status.antoniobsilva.com.br` no Better Stack (plano gratuito), com monitores HTTP a cada 3 minutos: API, Web, Learn e Workspace do TrinketOS, PEA (`/api/health`), System Fix, portfólio e ebooks. Seções por produto, em inglês e pt-BR. Todo serviço novo ganha um monitor e entra na seção do seu produto. O domínio próprio usa o CNAME `status` → `statuspage.betteruptime.com` no Cloudflare, em "Somente DNS" (com proxy dá 526); no ar desde 01/11/2026.

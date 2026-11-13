@@ -32,7 +32,7 @@ As aplicações têm repositórios próprios e se conectam a esta infraestrutura
 | Offer     | web (4101)                                                                  | PostgreSQL (uploads vão para o R2)                   |
 | Ebooks    | web (4121)                                                                  | nenhum (site estático)                               |
 | Portfólio | web (4122)                                                                  | nenhum (site estático)                               |
-| System Fix | web (4123)                                                                | nenhum (site estático)                               |
+| System Fix | web (4123, gateway e landing page), app (4126), api (4127)                | a API usa PostgreSQL e Redis (usuário `systemfix`); o painel chama a API pela rede data |
 | Pixel Election Arena | api (4124), web (4125)                                        | a API usa o Redis compartilhado (usuário `pea`); o web chama a API pela rede data |
 | TrinketOS | api (4110), web (4111), workspace (4112), design (4113), learn (4114)        | só a API usa PostgreSQL, Redis e RabbitMQ; os demais chamam a API |
 
@@ -112,9 +112,11 @@ Rollback manual: dispare a esteira com `workflow_dispatch` informando a tag (`im
 | Comando                                          | Descrição                                                                 |
 | ------------------------------------------------ | ------------------------------------------------------------------------- |
 | `scripts/up.sh [pasta]`                          | Sobe os serviços de `services.list` (ou só a pasta indicada) e espera ficarem *healthy* |
-| `scripts/deploy-service.sh <produto> <serviço> <tag>` | Troca a imagem de um serviço, espera ficar *healthy* e volta sozinho para a tag anterior se falhar |
+| `scripts/deploy-service.sh <produto> <serviço> <tag>` | Troca a imagem de um serviço, espera ficar *healthy* e, se falhar, volta sozinho para a tag e o `.env.production` anteriores; um deploy por serviço de cada vez |
 | `scripts/proxy-site.sh enable\|disable\|status <nome>` | Liga ou desliga um conjunto de sites do proxy; valida antes de recarregar e desfaz se falhar |
-| `scripts/validate.sh`                            | Confere todo `compose.yaml` contra os padrões, sem subir nada             |
+| `scripts/proxy-site.sh sync\|list`               | O site ligado é uma cópia: `sync` reaplica os ligados depois de um `git pull`; `list` mostra quais diferem do modelo |
+| `scripts/validate.sh`                            | Confere cada serviço de todo `compose.yaml` contra os padrões, sem subir nada (roda em todo pull request) |
+| `scripts/check-public.sh`                        | Falha se houver endereço IP, chave ou `.env` real em arquivo versionado   |
 | `scripts/bootstrap.sh`                           | Cria as redes Docker da plataforma (idempotente)                          |
 | `scripts/postgres-create-db.sh <nome> <arquivo>` | Cria banco e usuário próprios de um produto                               |
 | `scripts/redis-create-user.sh <nome> <arquivo>` | Cria o usuário Redis de um produto (só o prefixo `<nome>:`)                |
@@ -143,8 +145,9 @@ infra-vps/
 │   │                      #   sites por produto, ligados por scripts/proxy-site.sh
 │   └── backup/            # modelos de r2.env e heartbeat.env
 ├── backups.list           # bancos com backup: contêiner, agenda (systemd) e retenção
-├── apps/                  # um serviço por produto/ambiente (offer/production/web, trinketos/production/{api,web,workspace,design,learn})
-├── scripts/               # up, bootstrap, deploy-service, proxy-site, validate, postgres-*, redis-*, rabbitmq-*, observability-*, backup-*
+├── apps/                  # um serviço por produto/ambiente: apps/<produto>/production/<serviço> (a lista do que sobe é services.list)
+├── scripts/               # up, bootstrap, deploy-service, proxy-site, validate, check-public, postgres-*, redis-*, rabbitmq-*, observability-*, backup-*
+├── .github/workflows/     # validate.yml: confere a receita em todo pull request (sem acesso à VPS)
 ├── docs/
 │   ├── padroes.md         # nomes, redes, portas, recursos, segredos e dados
 │   └── diagrama.md        # diagrama da plataforma (atualizar a cada escopo novo)
