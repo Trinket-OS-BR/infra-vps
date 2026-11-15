@@ -37,5 +37,7 @@ apps/systemfix/production/web
 apps/pea/production/api
 # Pixel Election Arena web (Caddy, encaminha /api para a API pela rede data): exige .env e .env.production na pasta.
 apps/pea/production/web
+# Super Hotdogs: React Router SSR, PostgreSQL, RabbitMQ e Web Push.
+apps/superhotdog/production/web
 # O proxy vem por último: só recebe tráfego de quem já está de pé. Exige platform/proxy/.env.
 platform/proxy
