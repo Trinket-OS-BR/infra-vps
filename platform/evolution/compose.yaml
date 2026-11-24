@@ -4,7 +4,7 @@ name: platform-evolution
 
 services:
   evolution:
-    image: atendai/evolution-api:v2.2.3
+    image: evoapicloud/evolution-api:v2.2.3
     container_name: platform-evolution
     restart: unless-stopped
     init: true
