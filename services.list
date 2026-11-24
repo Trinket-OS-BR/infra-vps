@@ -7,6 +7,8 @@ platform/redis
 platform/rabbitmq
 # Exige platform/observability/.env (senha do administrador, gerada na VPS).
 platform/observability
+# Evolution API compartilhada (WhatsApp): exige platform/evolution/.env (API key, Postgres e Redis).
+platform/evolution
 # O Offer exige .env e .env.production na pasta (o deploy do CI grava os dois).
 apps/offer/production/web
 # TrinketOS API: exige .env, .env.production e /srv/secrets/trinketos-api-infra.env (make-infra-env.sh).

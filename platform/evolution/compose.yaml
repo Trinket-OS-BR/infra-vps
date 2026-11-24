@@ -1,0 +1,60 @@
+# Evolution API compartilhada (disparo WhatsApp dos produtos). Porta interna 4135 (docs/padroes.md).
+# Usa PostgreSQL (platform-postgres) e Redis (platform-redis) pela rede `data`, e sai para a internet pela rede `proxy`.
+name: platform-evolution
+
+services:
+  evolution:
+    image: atendai/evolution-api:v2.2.3
+    container_name: platform-evolution
+    restart: unless-stopped
+    init: true
+    env_file: [.env]
+    environment:
+      SERVER_PORT: "4135"
+      DATABASE_ENABLED: "true"
+      DATABASE_PROVIDER: "postgresql"
+      DATABASE_CONNECTION_CLIENT_NAME: "platform_evolution"
+      DATABASE_SAVE_DATA_INSTANCE: "true"
+      DATABASE_SAVE_DATA_NEW_MESSAGE: "false"
+      DATABASE_SAVE_MESSAGE_UPDATE: "false"
+      DATABASE_SAVE_DATA_CONTACTS: "false"
+      DATABASE_SAVE_DATA_CHATS: "false"
+      CACHE_REDIS_ENABLED: "true"
+      CACHE_REDIS_PREFIX_KEY: "evolution"
+      CACHE_REDIS_SAVE_INSTANCES: "true"
+      CACHE_LOCAL_ENABLED: "false"
+      DEL_INSTANCE: "false"
+      LOG_LEVEL: "ERROR,WARN"
+    expose: ["4135"]
+    volumes:
+      - platform-evolution-instances:/evolution/instances
+    networks: [data, proxy]
+    mem_limit: 512m
+    cpus: 0.75
+    pids_limit: 256
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4135/ >/dev/null 2>&1 || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    labels:
+      app.product: platform
+      app.service: evolution
+      app.environment: production
+
+volumes:
+  platform-evolution-instances:
+    name: platform-evolution-instances
+
+networks:
+  data:
+    external: true
+    name: data
+  proxy:
+    external: true
+    name: proxy

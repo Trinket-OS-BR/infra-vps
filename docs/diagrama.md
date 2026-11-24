@@ -23,12 +23,14 @@ flowchart LR
       redis[("platform-redis<br/>:4131 · 1 usuário ACL por produto")]
       rabbit[("platform-rabbitmq (no ar)<br/>AMQP 4132 · STOMP 4133 · 1 vhost por produto")]
       obs[("platform-openobserve (no ar)<br/>:4140 · 1 organização por produto")]
+      evo["platform-evolution<br/>:4135 · WhatsApp compartilhado"]
     end
     proxy -->|reverse_proxy| app
     app -->|"DATABASE_URL (rede data)"| postgres
     app -->|"REDIS_URL (só o prefixo do produto)"| redis
     app -.->|"AMQP ou STOMP relay (só o vhost do produto)"| rabbit
     app -.->|"OTLP: logs, métricas e traces (só a organização do produto)"| obs
+    app -.->|"HTTP (rede data)"| evo
     proxy -->|"painel (já autenticado pelo Zero Trust, mais o login do OpenObserve)"| obs
   end
 
@@ -42,6 +44,7 @@ flowchart LR
 | postgres | `platform/postgres` | data | 4130 | não |
 | redis | `platform/redis` | data | 4131 | não |
 | rabbitmq | `platform/rabbitmq` | data | 4132, 4133, 4134 | não |
+| evolution | `platform/evolution` | data, proxy | 4135 | não |
 | observability / openobserve | `platform/observability` | data, proxy | 4140, 4141 | não |
 | app (um por produto e serviço) | `apps/<produto>/production/<serviço>` | proxy, data | 4100–4129 | não |
 
